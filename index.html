@@ -3,34 +3,41 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AQUA Bot</title>
+  <title>AQUA Dashboard</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <div class="container">
+<div class="layout">
 
-    <header>
-      <img src="logo.png" class="logo" alt="Logo">
-      <h1>AQUA Bot</h1>
-    </header>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <img src="Novo_Projeto.webp" class="logo">
+    <h2>AQUA</h2>
 
-    <div class="card">
+    <a id="addBotBtn" class="add-bot">Adicionar Bot</a>
+  </aside>
 
-      <img src="Novo_Projeto.webp" class="character" alt="Aqua">
+  <!-- MAIN -->
+  <main class="main">
 
-      <p class="subtitle">Painel do bot AQUA</p>
-
-      <a id="loginBtn" class="btn">
-        Login com Discord
-      </a>
-
+    <div class="topbar">
       <div id="userBox"></div>
+    </div>
+
+    <div class="content">
+
+      <h2>Os teus servidores</h2>
+      <div id="guilds" class="grid"></div>
+
+      <a id="loginBtn" class="btn">Login com Discord</a>
 
     </div>
 
-  </div>
+  </main>
 
-  <script src="script.js"></script>
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>
