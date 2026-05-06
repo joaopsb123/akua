@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AQUA Dashboard</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -12,10 +12,10 @@
 
   <!-- SIDEBAR -->
   <aside class="sidebar">
-    <img src="Novo_Projeto.webp" class="logo">
+    <img src="logo.png" class="logo">
     <h2>AQUA</h2>
 
-    <a id="addBotBtn" class="add-bot">Adicionar Bot</a>
+    <a id="addBotBtn" class="add-bot">➕ Adicionar Bot</a>
   </aside>
 
   <!-- MAIN -->
@@ -27,10 +27,25 @@
 
     <div class="content">
 
-      <h2>Os teus servidores</h2>
-      <div id="guilds" class="grid"></div>
+      <!-- PERSONAGEM -->
+      <div class="hero">
+        <img src="Novo_Projeto.webp" class="character">
+        <div>
+          <h1>Dashboard AQUA</h1>
+          <p>Gerencia o teu bot facilmente</p>
+        </div>
+      </div>
 
       <a id="loginBtn" class="btn">Login com Discord</a>
+
+      <h2>Servidores</h2>
+      <div id="guilds" class="grid"></div>
+
+      <h2>Canais (simulado)</h2>
+      <div id="channels" class="grid small"></div>
+
+      <h2>Cargos (simulado)</h2>
+      <div id="roles" class="grid small"></div>
 
     </div>
 
