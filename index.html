@@ -2,81 +2,87 @@
 <html lang="pt">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AQUA Dashboard</title>
-  <link rel="stylesheet" href="style.css" />
+
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="layout">
-    <aside class="sidebar">
-      <img src="logo.png" class="logo" alt="Logo do AQUA" />
-      <h2>AQUA</h2>
 
-      <a
-        id="addBotBtn"
-        class="add-bot"
-        href="https://discord.com/oauth2/authorize?client_id=1403419829435760662&scope=bot%20applications.commands&permissions=8"
-        target="_blank"
-        rel="noreferrer"
-      >
-        ➕ Adicionar Bot
-      </a>
+<div class="layout">
 
-      <button id="logoutBtn" class="logout" type="button">Terminar sessão</button>
-    </aside>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <img src="logo.png" class="logo" alt="AQUA">
 
-    <main class="main">
-      <header class="topbar">
-        <div class="topbar-left">
-          <span class="badge">Dashboard</span>
-        </div>
+    <h2>AQUA</h2>
 
-        <div id="userBox" class="user-box"></div>
-      </header>
+    <a id="addBotBtn" class="btn green">➕ Adicionar Bot</a>
 
-      <section class="content">
-        <div class="hero">
-          <img src="Novo_Projeto.webp" class="character" alt="Personagem do AQUA" />
-          <div class="hero-text">
-            <h1>Dashboard AQUA</h1>
-            <p>Gerir servidores, canais e cargos pelo Firebase</p>
-            <a id="loginBtn" class="btn" href="#">Login com Discord</a>
-          </div>
-        </div>
+    <button id="logoutBtn" class="btn red">Terminar sessão</button>
+  </aside>
 
-        <div class="section-head">
-          <h2>Servidores</h2>
-          <span id="guildCount" class="muted"></span>
-        </div>
-        <div id="guilds" class="grid"></div>
+  <!-- MAIN -->
+  <main class="main">
 
-        <div class="panels">
-          <div class="panel">
-            <div class="panel-head">
-              <div>
-                <h2 id="selectedGuildName">Seleciona um servidor</h2>
-                <span id="selectedGuildId" class="muted"></span>
-              </div>
-              <span id="syncedState" class="muted">Os canais e cargos vêm do Firebase.</span>
-            </div>
+    <!-- TOP BAR -->
+    <header class="topbar">
+      <div id="userBox"></div>
 
-            <div class="panel-columns">
-              <div>
-                <h3>Canais</h3>
-                <div id="channels" class="list"></div>
-              </div>
+      <a id="loginBtn" class="btn blue">Login Discord</a>
+    </header>
 
-              <div>
-                <h3>Cargos</h3>
-                <div id="roles" class="list"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
-  </div>
+    <!-- CONTENT -->
+    <section class="content">
 
-  <script type="module" src="script.js"></script>
+      <!-- SERVIDORES -->
+      <h2>Servidores</h2>
+      <div id="guilds" class="grid"></div>
+
+      <p id="guildCount"></p>
+
+      <!-- CONFIG WELCOME -->
+      <h2>Boas-Vindas</h2>
+
+      <div class="panel">
+
+        <label>Ativar boas-vindas</label>
+        <input type="checkbox" id="welcomeToggle">
+
+        <label>ID do canal</label>
+        <input type="text" id="welcomeChannel" placeholder="Ex: 123456789">
+
+        <label>Mensagem</label>
+        <input type="text" id="welcomeMsg" placeholder="Bem-vindo {user} ao {server}">
+
+        <button id="saveWelcome" class="btn green">Guardar Configuração</button>
+
+      </div>
+
+      <!-- SERVIDOR SELECIONADO -->
+      <h2>Servidor selecionado</h2>
+
+      <div class="info">
+        <p><b>Nome:</b> <span id="selectedGuildName">Nenhum</span></p>
+        <p><b>ID:</b> <span id="selectedGuildId">-</span></p>
+        <p id="syncedState">Estado: aguardando seleção</p>
+      </div>
+
+      <!-- CANAIS -->
+      <h2>Canais</h2>
+      <div id="channels"></div>
+
+      <!-- CARGOS -->
+      <h2>Cargos</h2>
+      <div id="roles"></div>
+
+    </section>
+
+  </main>
+
+</div>
+
+<script type="module" src="script.js"></script>
+
 </body>
-</html>
+        </html>
