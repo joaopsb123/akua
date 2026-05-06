@@ -1,58 +1,82 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AQUA Dashboard</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div class="layout">
+    <aside class="sidebar">
+      <img src="logo.png" class="logo" alt="Logo do AQUA" />
+      <h2>AQUA</h2>
 
-<div class="layout">
+      <a
+        id="addBotBtn"
+        class="add-bot"
+        href="https://discord.com/oauth2/authorize?client_id=1403419829435760662&scope=bot%20applications.commands&permissions=8"
+        target="_blank"
+        rel="noreferrer"
+      >
+        ➕ Adicionar Bot
+      </a>
 
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <img src="logo.png" class="logo">
-    <h2>AQUA</h2>
+      <button id="logoutBtn" class="logout" type="button">Terminar sessão</button>
+    </aside>
 
-    <a id="addBotBtn" class="add-bot">➕ Adicionar Bot</a>
-  </aside>
-
-  <!-- MAIN -->
-  <main class="main">
-
-    <div class="topbar">
-      <div id="userBox"></div>
-    </div>
-
-    <div class="content">
-
-      <!-- PERSONAGEM -->
-      <div class="hero">
-        <img src="Novo_Projeto.webp" class="character">
-        <div>
-          <h1>Dashboard AQUA</h1>
-          <p>Gerencia o teu bot facilmente</p>
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <span class="badge">Dashboard</span>
         </div>
-      </div>
 
-      <a id="loginBtn" class="btn">Login com Discord</a>
+        <div id="userBox" class="user-box"></div>
+      </header>
 
-      <h2>Servidores</h2>
-      <div id="guilds" class="grid"></div>
+      <section class="content">
+        <div class="hero">
+          <img src="Novo_Projeto.webp" class="character" alt="Personagem do AQUA" />
+          <div class="hero-text">
+            <h1>Dashboard AQUA</h1>
+            <p>Gerir servidores, canais e cargos pelo Firebase</p>
+            <a id="loginBtn" class="btn" href="#">Login com Discord</a>
+          </div>
+        </div>
 
-      <h2>Canais (simulado)</h2>
-      <div id="channels" class="grid small"></div>
+        <div class="section-head">
+          <h2>Servidores</h2>
+          <span id="guildCount" class="muted"></span>
+        </div>
+        <div id="guilds" class="grid"></div>
 
-      <h2>Cargos (simulado)</h2>
-      <div id="roles" class="grid small"></div>
+        <div class="panels">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h2 id="selectedGuildName">Seleciona um servidor</h2>
+                <span id="selectedGuildId" class="muted"></span>
+              </div>
+              <span id="syncedState" class="muted">Os canais e cargos vêm do Firebase.</span>
+            </div>
 
-    </div>
+            <div class="panel-columns">
+              <div>
+                <h3>Canais</h3>
+                <div id="channels" class="list"></div>
+              </div>
 
-  </main>
+              <div>
+                <h3>Cargos</h3>
+                <div id="roles" class="list"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
 
-</div>
-
-<script src="script.js"></script>
+  <script type="module" src="script.js"></script>
 </body>
 </html>
