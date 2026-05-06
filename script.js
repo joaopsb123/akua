@@ -1,136 +1,296 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
 const CLIENT_ID = "1447995914290594056";
 const REDIRECT_URI = "https://akua-lake.vercel.app/";
-
-const loginBtn = document.getElementById("loginBtn");
-const guildsDiv = document.getElementById("guilds");
-const channelsDiv = document.getElementById("channels");
-const rolesDiv = document.getElementById("roles");
-const userBox = document.getElementById("userBox");
-
-document.getElementById("addBotBtn").href =
+const ADD_BOT_URL =
   "https://discord.com/oauth2/authorize?client_id=1403419829435760662&scope=bot%20applications.commands&permissions=8";
 
-// LOGIN URL (com email agora)
+const firebaseConfig = {
+  apiKey: "AIzaSyDJ_FRnNVJYOPbKUQZpx43WgYmqA-u-CB0",
+  authDomain: "bot-discord-4d74d.firebaseapp.com",
+  projectId: "https://bot-discord-4d74d-default-rtdb.firebaseio.com",
+  storageBucket: "bot-discord-4d74d",
+  messagingSenderId: "514594475218",
+  appId: "1:514594475218:web:e0bb790ab1cea3b4ef310b"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const addBotBtn = document.getElementById("addBotBtn");
+const userBox = document.getElementById("userBox");
+const guildsDiv = document.getElementById("guilds");
+const guildCount = document.getElementById("guildCount");
+const channelsDiv = document.getElementById("channels");
+const rolesDiv = document.getElementById("roles");
+const selectedGuildName = document.getElementById("selectedGuildName");
+const selectedGuildId = document.getElementById("selectedGuildId");
+const syncedState = document.getElementById("syncedState");
+
+const LOGIN_SCOPE = "identify email guilds";
+const TOKEN_KEY = "aqua_discord_token";
+const SELECTED_GUILD_KEY = "aqua_selected_guild_id";
+
+addBotBtn.href = ADD_BOT_URL;
 loginBtn.href =
   `https://discord.com/oauth2/authorize?client_id=1447995914290594056&response_type=code&redirect_uri=https%3A%2F%2Fakua-lake.vercel.app%2F&scope=identify+email+guilds` +
   `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
-  `&response_type=token&scope=identify email guilds`;
+  `&response_type=token` +
+  `&scope=${encodeURIComponent(LOGIN_SCOPE)}`;
 
-// TOKEN
-function getToken() {
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function getTokenFromHash() {
   const hash = window.location.hash;
-  if (!hash) return null;
-  return new URLSearchParams(hash.substring(1)).get("access_token");
+  if (!hash || !hash.includes("access_token=")) return null;
+
+  const params = new URLSearchParams(hash.slice(1));
+  return params.get("access_token");
 }
 
-// LOGOUT
+function getToken() {
+  const fromHash = getTokenFromHash();
+  if (fromHash) {
+    localStorage.setItem(TOKEN_KEY, fromHash);
+    window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+    return fromHash;
+  }
+
+  return localStorage.getItem(TOKEN_KEY);
+}
+
 function logout() {
-  window.location.hash = "";
-  location.reload();
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(SELECTED_GUILD_KEY);
+  window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+  window.location.reload();
 }
 
-// USER
+window.logout = logout;
+
+function defaultUserAvatar(user) {
+  const discriminator = Number(user?.discriminator || 0);
+  return `https://cdn.discordapp.com/embed/avatars/${discriminator % 5}.png`;
+}
+
+function guildIconUrl(guild) {
+  if (guild?.icon) {
+    return `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=128`;
+  }
+
+  return "https://cdn-icons-png.flaticon.com/512/2111/2111370.png";
+}
+
+async function api(path, token) {
+  const response = await fetch(`https://discord.com/api${path}`, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Discord API respondeu com ${response.status}`);
+  }
+
+  return response.json();
+}
+
 async function getUser(token) {
-  const res = await fetch("https://discord.com/api/users/@me", {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-  return res.json();
+  return api("/users/@me", token);
 }
 
-// GUILDS
 async function getGuilds(token) {
-  const res = await fetch("https://discord.com/api/users/@me/guilds", {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-  return res.json();
+  return api("/users/@me/guilds", token);
 }
 
-// MOCK (simulação dinâmica)
-function loadMockData(guildName) {
-  channelsDiv.innerHTML = "";
-  rolesDiv.innerHTML = "";
+function renderUser(user) {
+  const avatar = user.avatar
+    ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128`
+    : defaultUserAvatar(user);
 
-  const fakeChannels = [
-    "#geral",
-    "#comandos",
-    "#logs-" + guildName.toLowerCase()
-  ];
-
-  const fakeRoles = [
-    "Admin",
-    "Mod",
-    "Membro",
-    guildName + " Team"
-  ];
-
-  fakeChannels.forEach(c => {
-    const div = document.createElement("div");
-    div.className = "card";
-    div.innerText = c;
-    channelsDiv.appendChild(div);
-  });
-
-  fakeRoles.forEach(r => {
-    const div = document.createElement("div");
-    div.className = "card";
-    div.innerText = r;
-    rolesDiv.appendChild(div);
-  });
-}
-
-// INIT
-async function init() {
-  const token = getToken();
-  if (!token) return;
-
-  loginBtn.style.display = "none";
-
-  const user = await getUser(token);
-  const guilds = await getGuilds(token);
-
-  // USER UI (avatar + nome + email + logout)
   userBox.innerHTML = `
-    <div style="display:flex;align-items:center;gap:10px;justify-content:flex-end;">
-      <img src="https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png" 
-           width="40" style="border-radius:50%">
-      <div style="text-align:left;">
-        <div>${user.username}</div>
-        <small>${user.email || "sem email"}</small>
-      </div>
-      <button onclick="logout()" style="
-        margin-left:10px;
-        padding:6px 10px;
-        border:none;
-        border-radius:6px;
-        background:#ff4d4d;
-        color:white;
-        cursor:pointer;
-      ">Sair</button>
+    <img src="${avatar}" alt="Avatar do utilizador">
+    <div class="user-meta">
+      <div class="user-name">${escapeHtml(user.username)}</div>
+      <div class="user-email">${escapeHtml(user.email || "Sem email")}</div>
     </div>
   `;
+}
 
-  const owned = guilds.filter(g => g.owner);
+function renderEmptyState(target, text) {
+  target.innerHTML = `<div class="empty">${escapeHtml(text)}</div>`;
+}
 
-  owned.forEach(g => {
-    const div = document.createElement("div");
-    div.className = "card";
-    div.style.cursor = "pointer";
+function renderChannels(channels) {
+  channelsDiv.innerHTML = "";
 
-    // ICON ou fallback
-    const icon = g.icon
-      ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png`
-      : "https://cdn-icons-png.flaticon.com/512/5968/5968756.png";
+  if (!channels || channels.length === 0) {
+    renderEmptyState(channelsDiv, "Sem canais guardados neste servidor.");
+    return;
+  }
 
-    div.innerHTML = `
-      <img src="${icon}">
-      <p>${g.name}</p>
+  for (const channel of channels) {
+    const item = document.createElement("div");
+    item.className = "list-item";
+
+    item.innerHTML = `
+      <div class="icon">#</div>
+      <div class="content">
+        <div class="title">${escapeHtml(channel.name || "Sem nome")}</div>
+        <div class="sub">Tipo: ${escapeHtml(channel.type || "desconhecido")} · ID: ${escapeHtml(channel.id || "")}</div>
+      </div>
     `;
 
-    // CLICK → carregar canais/cargos
-    div.onclick = () => loadMockData(g.name);
+    channelsDiv.appendChild(item);
+  }
+}
 
-    guildsDiv.appendChild(div);
+function renderRoles(roles) {
+  rolesDiv.innerHTML = "";
+
+  if (!roles || roles.length === 0) {
+    renderEmptyState(rolesDiv, "Sem cargos guardados neste servidor.");
+    return;
+  }
+
+  for (const role of roles) {
+    const item = document.createElement("div");
+    item.className = "list-item";
+
+    item.innerHTML = `
+      <div class="icon">@</div>
+      <div class="content">
+        <div class="title">${escapeHtml(role.name || "Sem nome")}</div>
+        <div class="sub">Permissões: ${escapeHtml(role.permissions || "0")} · ID: ${escapeHtml(role.id || "")}</div>
+      </div>
+    `;
+
+    rolesDiv.appendChild(item);
+  }
+}
+
+function setSelectedGuildCard(guildId) {
+  document.querySelectorAll(".guild-card").forEach((card) => {
+    card.classList.toggle("selected", card.dataset.guildId === guildId);
   });
 }
+
+async function loadGuildFromFirebase(guild) {
+  selectedGuildName.textContent = guild.name;
+  selectedGuildId.textContent = guild.id;
+  syncedState.textContent = "A ler dados do Firebase...";
+
+  channelsDiv.innerHTML = `<div class="empty">A carregar canais...</div>`;
+  rolesDiv.innerHTML = `<div class="empty">A carregar cargos...</div>`;
+
+  const snap = await getDoc(doc(db, "guilds", guild.id));
+
+  if (!snap.exists()) {
+    syncedState.textContent = "Este servidor ainda não foi sincronizado pelo bot.";
+    renderEmptyState(channelsDiv, "Ainda não há canais guardados.");
+    renderEmptyState(rolesDiv, "Ainda não há cargos guardados.");
+    return;
+  }
+
+  const data = snap.data();
+
+  renderChannels(Array.isArray(data.channels) ? data.channels : []);
+  renderRoles(Array.isArray(data.roles) ? data.roles : []);
+
+  const updatedAt = data.updatedAt ? new Date(data.updatedAt).toLocaleString("pt-PT") : "sem data";
+  syncedState.textContent = `Última atualização: ${updatedAt}`;
+}
+
+function renderGuilds(guilds) {
+  guildsDiv.innerHTML = "";
+
+  if (!guilds.length) {
+    guildCount.textContent = "0 servidores";
+    renderEmptyState(guildsDiv, "Não encontrei servidores com a conta ligada.");
+    return;
+  }
+
+  guildCount.textContent = `${guilds.length} servidor${guilds.length === 1 ? "" : "es"}`;
+
+  for (const guild of guilds) {
+    const card = document.createElement("div");
+    card.className = "guild-card";
+    card.dataset.guildId = guild.id;
+
+    card.innerHTML = `
+      <img class="guild-icon" src="${guildIconUrl(guild)}" alt="Ícone de ${escapeHtml(guild.name)}">
+      <div class="guild-name">${escapeHtml(guild.name)}</div>
+      <div class="guild-id">${escapeHtml(guild.id)}</div>
+    `;
+
+    card.addEventListener("click", async () => {
+      localStorage.setItem(SELECTED_GUILD_KEY, guild.id);
+      setSelectedGuildCard(guild.id);
+      await loadGuildFromFirebase(guild);
+    });
+
+    guildsDiv.appendChild(card);
+  }
+}
+
+async function init() {
+  const token = getToken();
+
+  if (!token) {
+    loginBtn.style.display = "inline-flex";
+    logoutBtn.style.display = "none";
+    renderEmptyState(guildsDiv, "Faz login para carregar os teus servidores.");
+    renderEmptyState(channelsDiv, "Seleciona um servidor para ver os canais.");
+    renderEmptyState(rolesDiv, "Seleciona um servidor para ver os cargos.");
+    return;
+  }
+
+  loginBtn.style.display = "none";
+  logoutBtn.style.display = "inline-flex";
+
+  try {
+    const user = await getUser(token);
+    renderUser(user);
+
+    const guilds = await getGuilds(token);
+    const ownedGuilds = guilds.filter((guild) => guild.owner);
+
+    renderGuilds(ownedGuilds);
+
+    const lastGuildId = localStorage.getItem(SELECTED_GUILD_KEY);
+    const initialGuild =
+      ownedGuilds.find((guild) => guild.id === lastGuildId) || ownedGuilds[0];
+
+    if (initialGuild) {
+      setSelectedGuildCard(initialGuild.id);
+      await loadGuildFromFirebase(initialGuild);
+    } else {
+      selectedGuildName.textContent = "Nenhum servidor encontrado";
+      selectedGuildId.textContent = "";
+      renderEmptyState(channelsDiv, "Sem servidores.");
+      renderEmptyState(rolesDiv, "Sem servidores.");
+    }
+  } catch (error) {
+    console.error(error);
+    localStorage.removeItem(TOKEN_KEY);
+    renderEmptyState(guildsDiv, "Falha a ligar à conta Discord.");
+    renderEmptyState(channelsDiv, "Não foi possível carregar dados.");
+    renderEmptyState(rolesDiv, "Não foi possível carregar dados.");
+    loginBtn.style.display = "inline-flex";
+    logoutBtn.style.display = "none";
+  }
+}
+
+logoutBtn.addEventListener("click", logout);
 
 init();
