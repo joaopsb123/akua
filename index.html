@@ -1,205 +1,309 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AQUA Dashboard</title>
+
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+  <div class="bg"></div>
+
+  <!-- LANDING -->
   <main id="landing" class="landing">
-    <div class="landing-card">
-      <div class="brand">
-        <img src="images (6).jpeg" alt="AQUA" class="brand-logo">
-        <div>
-          <h1>AQUA</h1>
-          <p>Dashboard elegante para gerir o teu bot</p>
+
+    <section class="hero-card">
+
+      <nav class="navbar">
+        <div class="logo-box">
+          <img src="images (6).jpeg" class="logo" alt="AQUA">
+          <div>
+            <h1>AQUA</h1>
+            <span>Discord Dashboard</span>
+          </div>
         </div>
+
+        <a id="loginBtn" class="login-btn" href="#">
+          Entrar com Discord
+        </a>
+      </nav>
+
+      <div class="hero-content">
+
+        <div class="hero-left">
+
+          <span class="badge">
+            BOT COMPLETO
+          </span>
+
+          <h2>
+            Controla o teu servidor Discord com estilo.
+          </h2>
+
+          <p>
+            Sistema de boas-vindas, saídas, autorole, anti-link,
+            economia, mini jogos, logs e muito mais.
+          </p>
+
+          <div class="hero-buttons">
+
+            <a
+              href="https://discord.com/oauth2/authorize?client_id=1403419829435760662&scope=bot%20applications.commands&permissions=8"
+              target="_blank"
+              class="primary-btn"
+            >
+              Adicionar Bot
+            </a>
+
+            <a href="#dashboard" class="secondary-btn">
+              Ver Dashboard
+            </a>
+
+          </div>
+
+        </div>
+
+        <div class="hero-right">
+          <img src="Novo_Projeto.webp" class="hero-image" alt="AQUA">
+        </div>
+
       </div>
 
-      <div class="hero">
-        <img src="Novo_Projeto.webp" alt="Personagem do AQUA" class="hero-img">
-        <div class="hero-text">
-          <h2>Controla o teu bot num painel moderno</h2>
-          <p>Configura boas-vindas, saídas, canais e cargos a partir de um painel limpo e responsivo.</p>
-          <a id="loginBtn" class="btn primary" href="#">Entrar com Discord</a>
-        </div>
-      </div>
+    </section>
 
-      <div class="feature-grid">
-        <div class="feature">
-          <span>⚙️</span>
-          <strong>Configuração rápida</strong>
-          <p>Escolhe servidor e ajusta tudo num instante.</p>
-        </div>
-        <div class="feature">
-          <span>💬</span>
-          <strong>Boas-vindas e saídas</strong>
-          <p>Define mensagens e canais por servidor.</p>
-        </div>
-        <div class="feature">
-          <span>🧭</span>
-          <strong>Canais e cargos</strong>
-          <p>Dados organizados e fáceis de navegar.</p>
-        </div>
-      </div>
-    </div>
   </main>
 
+  <!-- DASHBOARD -->
   <main id="dashboard" class="dashboard hidden">
+
     <aside class="sidebar">
-      <div class="sidebar-brand">
-        <img src="images (6).jpeg" class="sidebar-logo" alt="AQUA">
-        <div>
-          <h2>AQUA</h2>
-          <p>Dashboard</p>
+
+      <div class="sidebar-top">
+
+        <div class="sidebar-logo-box">
+          <img src="images (6).jpeg" class="sidebar-logo">
+          <div>
+            <h2>AQUA</h2>
+            <span>Dashboard</span>
+          </div>
         </div>
+
+        <a
+          id="addBotBtn"
+          class="sidebar-add"
+          href="https://discord.com/oauth2/authorize?client_id=1403419829435760662&scope=bot%20applications.commands&permissions=8"
+          target="_blank"
+        >
+          ➕ Adicionar Bot
+        </a>
+
       </div>
 
-      <a
-        id="addBotBtn"
-        class="btn success"
-        href="https://discord.com/oauth2/authorize?client_id=1403419829435760662&scope=bot%20applications.commands&permissions=8"
-        target="_blank"
-        rel="noreferrer"
-      >
-        ➕ Adicionar Bot
-      </a>
-
-      <button id="logoutBtn" class="btn ghost" type="button">Terminar sessão</button>
-
-      <div class="sidebar-info">
-        <span id="guildCount">0 servidores</span>
-        <small>Servidores onde és dono</small>
+      <div class="servers-title">
+        <span>Servidores</span>
+        <small id="guildCount">0</small>
       </div>
+
+      <div id="guilds" class="guilds-list"></div>
+
+      <button id="logoutBtn" class="logout-btn">
+        Terminar sessão
+      </button>
+
     </aside>
 
-    <section class="content">
+    <section class="main-content">
+
       <header class="topbar">
+
         <div class="topbar-left">
-          <span class="chip">Online</span>
-          <span class="muted" id="syncedState">Pronto</span>
+
+          <div class="status-dot"></div>
+
+          <div>
+            <h3>Painel AQUA</h3>
+            <span id="syncedState">Sincronizado</span>
+          </div>
+
         </div>
+
         <div id="userBox" class="user-box"></div>
+
       </header>
 
-      <section class="overview">
-        <div class="overview-card">
-          <h2>Servidor selecionado</h2>
-          <p class="muted">Clica num servidor para carregar canais, cargos e configurações.</p>
-          <div class="selected-meta">
-            <div><b>Nome:</b> <span id="selectedGuildName">Nenhum</span></div>
-            <div><b>ID:</b> <span id="selectedGuildId">-</span></div>
+      <section class="selected-server">
+
+        <div class="selected-card">
+
+          <div>
+            <h2 id="selectedGuildName">
+              Nenhum servidor selecionado
+            </h2>
+
+            <span id="selectedGuildId">
+              -
+            </span>
           </div>
+
         </div>
 
-        <div class="overview-card">
-          <h2>Boas-vindas</h2>
-          <p class="muted">Seleciona um canal e define a mensagem.</p>
-          <div class="mini-status">
-            <span>Canal:</span>
-            <strong id="welcomePreview">Nenhum</strong>
-          </div>
-        </div>
-
-        <div class="overview-card">
-          <h2>Saídas</h2>
-          <p class="muted">Seleciona um canal e personaliza a mensagem.</p>
-          <div class="mini-status">
-            <span>Canal:</span>
-            <strong id="goodbyePreview">Nenhum</strong>
-          </div>
-        </div>
       </section>
 
-      <section class="grid-section">
-        <div class="panel">
-          <div class="panel-head">
-            <h2>Servidores</h2>
-            <span class="muted">Seleciona um servidor</span>
-          </div>
-          <div id="guilds" class="guild-grid"></div>
-        </div>
+      <section class="content-grid">
 
+        <!-- CANAIS -->
         <div class="panel">
-          <div class="panel-head">
+
+          <div class="panel-header">
             <h2>Canais</h2>
-            <span class="muted">Organizados por nome e tipo</span>
           </div>
+
           <div id="channels" class="list"></div>
+
         </div>
 
+        <!-- CARGOS -->
         <div class="panel">
-          <div class="panel-head">
+
+          <div class="panel-header">
             <h2>Cargos</h2>
-            <span class="muted">Lista limpa e detalhada</span>
           </div>
+
           <div id="roles" class="list"></div>
+
         </div>
+
       </section>
 
+      <!-- CONFIGS -->
       <section class="config-grid">
+
+        <!-- WELCOME -->
         <div class="panel">
-          <div class="panel-head">
+
+          <div class="panel-header">
             <h2>Boas-vindas</h2>
-            <span class="muted">Configuração por servidor</span>
           </div>
 
           <div class="form">
-            <label class="check-row">
+
+            <label class="switch-row">
               <input type="checkbox" id="welcomeToggle">
-              <span>Ativar boas-vindas</span>
+              <span>Ativar sistema</span>
             </label>
 
-            <label>Canal de boas-vindas</label>
+            <label>Canal</label>
+
             <select id="welcomeChannel"></select>
 
             <label>Mensagem</label>
-            <input type="text" id="welcomeMsg" placeholder="Bem-vindo {mention} ao {server}!">
 
-            <button id="saveWelcome" class="btn primary" type="button">Guardar boas-vindas</button>
+            <input
+              type="text"
+              id="welcomeMsg"
+              placeholder="Bem-vindo {mention}"
+            >
+
+            <button id="saveWelcome" class="save-btn">
+              Guardar
+            </button>
+
           </div>
+
         </div>
 
+        <!-- GOODBYE -->
         <div class="panel">
-          <div class="panel-head">
+
+          <div class="panel-header">
             <h2>Saídas</h2>
-            <span class="muted">Configuração por servidor</span>
           </div>
 
           <div class="form">
-            <label class="check-row">
+
+            <label class="switch-row">
               <input type="checkbox" id="goodbyeToggle">
-              <span>Ativar saídas</span>
+              <span>Ativar sistema</span>
             </label>
 
-            <label>Canal de saída</label>
+            <label>Canal</label>
+
             <select id="goodbyeChannel"></select>
 
             <label>Mensagem</label>
-            <input type="text" id="goodbyeMsg" placeholder="Até logo {user}, volta sempre!">
 
-            <button id="saveGoodbye" class="btn primary" type="button">Guardar saídas</button>
+            <input
+              type="text"
+              id="goodbyeMsg"
+              placeholder="Até logo {user}"
+            >
+
+            <button id="saveGoodbye" class="save-btn">
+              Guardar
+            </button>
+
           </div>
+
         </div>
 
+        <!-- AUTOROLE -->
         <div class="panel">
-          <div class="panel-head">
-            <h2>Estado</h2>
-            <span class="muted">Sincronização</span>
+
+          <div class="panel-header">
+            <h2>Autorole</h2>
           </div>
 
-          <div class="status-box">
-            <div><b>Última sincronização:</b> <span id="lastSync">Sem dados</span></div>
-            <div><b>Canal boas-vindas:</b> <span id="welcomeState">-</span></div>
-            <div><b>Canal saídas:</b> <span id="goodbyeState">-</span></div>
+          <div class="form">
+
+            <label class="switch-row">
+              <input type="checkbox" id="autoroleToggle">
+              <span>Ativar autorole</span>
+            </label>
+
+            <label>Cargo</label>
+
+            <select id="autoroleRole"></select>
+
+            <button id="saveAutorole" class="save-btn">
+              Guardar
+            </button>
+
           </div>
+
         </div>
+
+        <!-- ANTILINK -->
+        <div class="panel">
+
+          <div class="panel-header">
+            <h2>Anti-Link</h2>
+          </div>
+
+          <div class="form">
+
+            <label class="switch-row">
+              <input type="checkbox" id="antilinkToggle">
+              <span>Bloquear links</span>
+            </label>
+
+            <button id="saveAntiLink" class="save-btn">
+              Guardar
+            </button>
+
+          </div>
+
+        </div>
+
       </section>
+
     </section>
+
   </main>
 
   <script type="module" src="script.js"></script>
+
 </body>
-  </html>
+</html>
