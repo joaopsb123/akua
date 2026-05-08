@@ -1,399 +1,264 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-  <meta name="google-site-verification" content="2WVmzDBXADMLj4A62OjzHfmY82XA-ZNgvSg-z9A0hsM" />
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AQUA Dashboard</title>
-  <link rel="stylesheet" href="style.css">
+<meta name="google-site-verification" content="2WVmzDBXADMLj4A62OjzHfmY82XA-ZNgvSg-z9A0hsM" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>AQUA Dashboard</title>
+
+<link rel="stylesheet" href="style.css">
+
+<script type="module" src="script.js" defer></script>
 </head>
+
 <body>
 
-  <main id="landing" class="landing">
-    <section class="hero-card">
-      <nav class="navbar">
-        <div class="logo-box">
-          <img src="images (6).jpeg" class="logo" alt="AQUA">
-          <div>
-            <h1>AQUA</h1>
-            <span>Discord Dashboard</span>
-          </div>
-        </div>
+<!-- LANDING -->
 
-        <a id="loginBtn" class="login-btn" href="#">Entrar com Discord</a>
-      </nav>
+<section id="landing" class="landing">
 
-      <div class="hero-content">
-        <div class="hero-left">
-          <span class="badge">BOT COMPLETO</span>
-          <h2>Controla o teu servidor Discord com estilo.</h2>
-          <p>
-            Sistema de boas-vindas, saídas, autorole, anti-link, economia,
-            mini jogos, logs, tickets, níveis, embeds e muito mais.
-          </p>
+  <div class="landing-overlay"></div>
 
-          <div class="hero-buttons">
-            <a
-              href="https://discord.com/oauth2/authorize?client_id=1403419829435760662&scope=bot%20applications.commands&permissions=8"
-              target="_blank"
-              rel="noreferrer"
-              class="primary-btn"
-            >
-              Adicionar Bot
-            </a>
+  <div class="landing-content">
 
-            <a href="#" id="goDashboardBtn" class="secondary-btn">
-              Ver Dashboard
-            </a>
-          </div>
-        </div>
+    <img src="images (6).jpeg" class="landing-logo">
 
-        <div class="hero-right">
-          <img src="Novo_Projeto.webp" class="hero-image" alt="AQUA">
-        </div>
-      </div>
-    </section>
-  </main>
+    <h1>AQUA BOT</h1>
 
-  <main id="dashboard" class="dashboard hidden">
-    <aside class="sidebar">
-      <div class="sidebar-top">
-        <div class="sidebar-logo-box">
-          <img src="images (6).jpeg" class="sidebar-logo" alt="AQUA">
-          <div>
-            <h2>AQUA</h2>
-            <span>Dashboard</span>
-          </div>
-        </div>
+    <p>
+      Dashboard completo para o teu bot Discord.
+    </p>
 
-        <a
-          id="addBotBtn"
-          class="sidebar-add"
-          href="https://discord.com/oauth2/authorize?client_id=1403419829435760662&scope=bot%20applications.commands&permissions=8"
-          target="_blank"
-          rel="noreferrer"
-        >
-          ➕ Adicionar Bot
-        </a>
-      </div>
+    <div class="landing-buttons">
 
-      <div class="servers-title">
-        <span>Servidores</span>
-        <small id="guildCount">0</small>
-      </div>
+      <a id="loginBtn" class="main-btn">
+        Login com Discord
+      </a>
 
-      <div id="guilds" class="guilds-list"></div>
+      <a id="goDashboardBtn" class="secondary-btn">
+        Abrir Dashboard
+      </a>
 
-      <button id="logoutBtn" class="logout-btn" type="button">
-        Terminar sessão
+    </div>
+
+  </div>
+
+</section>
+
+<!-- DASHBOARD -->
+
+<section id="dashboard" class="dashboard hidden">
+
+  <!-- SIDEBAR -->
+
+  <aside class="sidebar">
+
+    <div class="sidebar-top">
+
+      <img src="images (6).jpeg" class="sidebar-logo">
+
+      <h2>AQUA</h2>
+
+    </div>
+
+    <div id="userBox" class="user-box"></div>
+
+    <div class="sidebar-actions">
+
+      <a id="addBotBtn" class="sidebar-btn">
+        Adicionar Bot
+      </a>
+
+      <button id="logoutBtn" class="sidebar-btn red">
+        Terminar Sessão
       </button>
-    </aside>
-
-    <section class="main-content">
-      <header class="topbar">
-        <div class="topbar-left">
-          <div class="status-dot"></div>
-          <div>
-            <h3>Painel AQUA</h3>
-            <span id="syncedState">Sincronizado</span>
-          </div>
-        </div>
-
-        <div id="userBox" class="user-box"></div>
-      </header>
-
-      <section class="selected-server">
-        <div class="selected-card">
-          <div>
-            <h2 id="selectedGuildName">Nenhum servidor selecionado</h2>
-            <span id="selectedGuildId">-</span>
-          </div>
-        </div>
-      </section>
-
-      <section class="content-grid">
-        <div class="panel">
-          <div class="panel-header">
-            <h2>Canais</h2>
-          </div>
-          <div id="channels" class="list"></div>
-        </div>
-
-        <div class="panel">
-          <div class="panel-header">
-            <h2>Cargos</h2>
-          </div>
-          <div id="roles" class="list"></div>
-        </div>
-      </section>
-
-      <section class="config-grid">
-        <div class="panel">
-          <div class="panel-header">
-            <h2>Boas-vindas</h2>
-          </div>
-
-          <div class="form">
-            <label class="switch-row">
-              <input type="checkbox" id="welcomeToggle">
-              <span>Ativar sistema</span>
-            </label>
-
-            <label class="switch-row">
-              <input type="checkbox" id="welcomeEmbedToggle">
-              <span>Usar embed</span>
-            </label>
-
-            <label>Canal</label>
-            <select id="welcomeChannel"></select>
-
-            <label>Título</label>
-            <input type="text" id="welcomeTitle" placeholder="Bem-vindo!">
-
-            <label>Mensagem</label>
-            <input type="text" id="welcomeMsg" placeholder="Bem-vindo {mention} ao {server}">
-
-            <label>Cor (hex sem #)</label>
-            <input type="text" id="welcomeColor" placeholder="57f287">
-
-            <label>Footer</label>
-            <input type="text" id="welcomeFooter" placeholder="AQUA">
-
-            <label>Thumbnail URL</label>
-            <input type="text" id="welcomeThumbnail" placeholder="https://...">
-
-            <button id="saveWelcome" class="save-btn" type="button">Guardar</button>
-          </div>
-        </div>
-
-        <div class="panel">
-          <div class="panel-header">
-            <h2>Saídas</h2>
-          </div>
-
-          <div class="form">
-            <label class="switch-row">
-              <input type="checkbox" id="goodbyeToggle">
-              <span>Ativar sistema</span>
-            </label>
-
-            <label class="switch-row">
-              <input type="checkbox" id="goodbyeEmbedToggle">
-              <span>Usar embed</span>
-            </label>
-
-            <label>Canal</label>
-            <select id="goodbyeChannel"></select>
-
-            <label>Título</label>
-            <input type="text" id="goodbyeTitle" placeholder="Até já!">
-
-            <label>Mensagem</label>
-            <input type="text" id="goodbyeMsg" placeholder="Até logo {user}, volta sempre!">
 
-            <label>Cor (hex sem #)</label>
-            <input type="text" id="goodbyeColor" placeholder="ff5a6a">
+    </div>
 
-            <label>Footer</label>
-            <input type="text" id="goodbyeFooter" placeholder="AQUA">
+    <div class="guild-header">
 
-            <label>Thumbnail URL</label>
-            <input type="text" id="goodbyeThumbnail" placeholder="https://...">
+      <span>Servidores</span>
 
-            <button id="saveGoodbye" class="save-btn" type="button">Guardar</button>
-          </div>
-        </div>
+      <span id="guildCount">0</span>
 
-        <div class="panel">
-          <div class="panel-header">
-            <h2>Autorole</h2>
-          </div>
+    </div>
 
-          <div class="form">
-            <label class="switch-row">
-              <input type="checkbox" id="autoroleToggle">
-              <span>Ativar autorole</span>
-            </label>
+    <div id="guilds" class="guilds"></div>
 
-            <label>Cargo</label>
-            <select id="autoroleRole"></select>
+  </aside>
 
-            <button id="saveAutorole" class="save-btn" type="button">Guardar</button>
-          </div>
-        </div>
+  <!-- MAIN -->
 
-        <div class="panel">
-          <div class="panel-header">
-            <h2>Daily</h2>
-          </div>
+  <main class="main">
 
-          <div class="form">
-            <label class="switch-row">
-              <input type="checkbox" id="dailyToggle">
-              <span>Ativar daily por site</span>
-            </label>
+    <div class="main-header">
 
-            <label>Recompensa mínima</label>
-            <input type="number" id="dailyMin" min="1" value="50">
+      <div>
 
-            <label>Recompensa máxima</label>
-            <input type="number" id="dailyMax" min="1" value="150">
+        <h1 id="selectedGuildName">
+          Seleciona um servidor
+        </h1>
 
-            <label>Cooldown em horas</label>
-            <input type="number" id="dailyCooldown" min="1" value="24">
+        <p id="selectedGuildId">
+          -
+        </p>
 
-            <button id="saveDaily" class="save-btn" type="button">Guardar</button>
-          </div>
-        </div>
+      </div>
 
-        <div class="panel">
-          <div class="panel-header">
-            <h2>Embed personalizada</h2>
-          </div>
+      <div id="syncedState" class="sync-state">
+        Sem sincronização
+      </div>
 
-          <div class="form">
-            <label class="switch-row">
-              <input type="checkbox" id="embedToggle">
-              <span>Ativar embed personalizada</span>
-            </label>
+    </div>
 
-            <label>Canal</label>
-            <select id="embedChannel"></select>
+    <!-- DAILY -->
 
-            <label>Título</label>
-            <input type="text" id="embedTitle" placeholder="Título do embed">
+    <section class="card">
 
-            <label>Descrição</label>
-            <input type="text" id="embedDescription" placeholder="Mensagem do embed">
+      <h2>Daily Reward</h2>
 
-            <label>Cor (hex sem #)</label>
-            <input type="text" id="embedColor" placeholder="5865f2">
-
-            <label>Footer</label>
-            <input type="text" id="embedFooter" placeholder="AQUA">
+      <p>
+        Recebe moedas diretamente no bot.
+      </p>
 
-            <label>Thumbnail URL</label>
-            <input type="text" id="embedThumbnail" placeholder="https://...">
+      <button id="claimDailyBtn" class="save-btn">
+        Pegar Daily
+      </button>
 
-            <label>Image URL</label>
-            <input type="text" id="embedImage" placeholder="https://...">
-
-            <label class="switch-row">
-              <input type="checkbox" id="embedTimestamp">
-              <span>Mostrar timestamp</span>
-            </label>
-
-            <button id="saveEmbed" class="save-btn" type="button">Guardar</button>
-          </div>
-        </div>
-
-        <div class="panel">
-          <div class="panel-header">
-            <h2>Tickets</h2>
-          </div>
-
-          <div class="form">
-            <label class="switch-row">
-              <input type="checkbox" id="ticketToggle">
-              <span>Ativar tickets</span>
-            </label>
-
-            <label>Categoria</label>
-            <select id="ticketCategory"></select>
-
-            <label>Cargo de suporte</label>
-            <select id="ticketSupportRole"></select>
-
-            <label>Canal do painel</label>
-            <select id="ticketPanelChannel"></select>
-
-            <label>Mensagem do painel</label>
-            <input type="text" id="ticketMessage" placeholder="Abre um ticket para falar connosco!">
-
-            <button id="saveTicket" class="save-btn" type="button">Guardar</button>
-          </div>
-        </div>
-
-        <div class="panel">
-          <div class="panel-header">
-            <h2>Anti-Link</h2>
-          </div>
-
-          <div class="form">
-            <label class="switch-row">
-              <input type="checkbox" id="antilinkToggle">
-              <span>Bloquear links</span>
-            </label>
-
-            <label class="switch-row">
-              <input type="checkbox" id="antilinkWarnToggle">
-              <span>Enviar aviso em embed</span>
-            </label>
-
-            <label>Mensagem de aviso</label>
-            <input type="text" id="antilinkWarnMsg" placeholder="Links não são permitidos aqui, {mention}.">
-
-            <label>Timeout automático (segundos)</label>
-            <input type="number" id="antilinkTimeout" min="0" value="0">
-
-            <button id="saveAntiLink" class="save-btn" type="button">Guardar</button>
-          </div>
-        </div>
-
-        <div class="panel">
-          <div class="panel-header">
-            <h2>Logs</h2>
-          </div>
-
-          <div class="form">
-            <label class="switch-row">
-              <input type="checkbox" id="logsToggle">
-              <span>Ativar logs</span>
-            </label>
-
-            <label>Canal de logs</label>
-            <select id="logsChannel"></select>
-
-            <button id="saveLogs" class="save-btn" type="button">Guardar</button>
-          </div>
-        </div>
-
-        <div class="panel">
-          <div class="panel-header">
-            <h2>Níveis / XP</h2>
-          </div>
-
-          <div class="form">
-            <label class="switch-row">
-              <input type="checkbox" id="levelsToggle">
-              <span>Ativar níveis</span>
-            </label>
-
-            <label>XP mínima por mensagem</label>
-            <input type="number" id="levelsMin" min="1" value="5">
-
-            <label>XP máxima por mensagem</label>
-            <input type="number" id="levelsMax" min="1" value="15">
-
-            <label>Cooldown em segundos</label>
-            <input type="number" id="levelsCooldown" min="1" value="60">
-
-            <label>Canal de level up</label>
-            <select id="levelsChannel"></select>
-
-            <label>Mensagem de level up</label>
-            <input type="text" id="levelsMessage" placeholder="Parabéns {user}, subiste para o nível {level}!">
-
-            <label>Cargo de recompensa</label>
-            <select id="levelsRole"></select>
-
-            <button id="saveLevels" class="save-btn" type="button">Guardar</button>
-          </div>
-        </div>
-      </section>
     </section>
+
+    <!-- WELCOME -->
+
+    <section class="card">
+
+      <h2>Boas-vindas</h2>
+
+      <div class="switch-row">
+
+        <span>Ativar sistema</span>
+
+        <label class="switch">
+          <input type="checkbox" id="welcomeToggle">
+          <span class="slider"></span>
+        </label>
+
+      </div>
+
+      <select id="welcomeChannel"></select>
+
+      <textarea
+        id="welcomeMsg"
+        placeholder="Mensagem de boas-vindas"
+      ></textarea>
+
+      <button id="saveWelcome" class="save-btn">
+        Guardar Boas-vindas
+      </button>
+
+    </section>
+
+    <!-- GOODBYE -->
+
+    <section class="card">
+
+      <h2>Saídas</h2>
+
+      <div class="switch-row">
+
+        <span>Ativar sistema</span>
+
+        <label class="switch">
+          <input type="checkbox" id="goodbyeToggle">
+          <span class="slider"></span>
+        </label>
+
+      </div>
+
+      <select id="goodbyeChannel"></select>
+
+      <textarea
+        id="goodbyeMsg"
+        placeholder="Mensagem de saída"
+      ></textarea>
+
+      <button id="saveGoodbye" class="save-btn">
+        Guardar Saídas
+      </button>
+
+    </section>
+
+    <!-- AUTOROLE -->
+
+    <section class="card">
+
+      <h2>Autorole</h2>
+
+      <div class="switch-row">
+
+        <span>Ativar sistema</span>
+
+        <label class="switch">
+          <input type="checkbox" id="autoroleToggle">
+          <span class="slider"></span>
+        </label>
+
+      </div>
+
+      <select id="autoroleRole"></select>
+
+      <button id="saveAutorole" class="save-btn">
+        Guardar Autorole
+      </button>
+
+    </section>
+
+    <!-- ANTI LINK -->
+
+    <section class="card">
+
+      <h2>Anti-Link</h2>
+
+      <div class="switch-row">
+
+        <span>Ativar sistema</span>
+
+        <label class="switch">
+          <input type="checkbox" id="antilinkToggle">
+          <span class="slider"></span>
+        </label>
+
+      </div>
+
+      <button id="saveAntiLink" class="save-btn">
+        Guardar Anti-Link
+      </button>
+
+    </section>
+
+    <!-- CHANNELS -->
+
+    <section class="card">
+
+      <h2>Canais</h2>
+
+      <div id="channels" class="list-box"></div>
+
+    </section>
+
+    <!-- ROLES -->
+
+    <section class="card">
+
+      <h2>Cargos</h2>
+
+      <div id="roles" class="list-box"></div>
+
+    </section>
+
   </main>
 
-  <script type="module" src="script.js"></script>
+</section>
+
 </body>
   </html>
