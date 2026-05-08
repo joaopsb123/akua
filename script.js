@@ -9,9 +9,6 @@ import {
 const CLIENT_ID = "1447995914290594056";
 const REDIRECT_URI = "https://akua-lake.vercel.app/";
 
-const ADD_BOT_URL =
-  "https://discord.com/oauth2/authorize?client_id=1403419829435760662&scope=bot%20applications.commands&permissions=8";
-
 const firebaseConfig = {
   apiKey: "AIzaSyDJ_FRnNVJYOPbKUQZpx43WgYmqA-u-CB0",
   authDomain: "bot-discord-4d74d.firebaseapp.com",
@@ -37,27 +34,76 @@ const guildsDiv = document.getElementById("guilds");
 const guildCount = document.getElementById("guildCount");
 const channelsDiv = document.getElementById("channels");
 const rolesDiv = document.getElementById("roles");
-
 const selectedGuildName = document.getElementById("selectedGuildName");
 const selectedGuildId = document.getElementById("selectedGuildId");
 const syncedState = document.getElementById("syncedState");
 
 const welcomeToggle = document.getElementById("welcomeToggle");
+const welcomeEmbedToggle = document.getElementById("welcomeEmbedToggle");
 const welcomeChannel = document.getElementById("welcomeChannel");
+const welcomeTitle = document.getElementById("welcomeTitle");
 const welcomeMsg = document.getElementById("welcomeMsg");
+const welcomeColor = document.getElementById("welcomeColor");
+const welcomeFooter = document.getElementById("welcomeFooter");
+const welcomeThumbnail = document.getElementById("welcomeThumbnail");
 const saveWelcome = document.getElementById("saveWelcome");
 
 const goodbyeToggle = document.getElementById("goodbyeToggle");
+const goodbyeEmbedToggle = document.getElementById("goodbyeEmbedToggle");
 const goodbyeChannel = document.getElementById("goodbyeChannel");
+const goodbyeTitle = document.getElementById("goodbyeTitle");
 const goodbyeMsg = document.getElementById("goodbyeMsg");
+const goodbyeColor = document.getElementById("goodbyeColor");
+const goodbyeFooter = document.getElementById("goodbyeFooter");
+const goodbyeThumbnail = document.getElementById("goodbyeThumbnail");
 const saveGoodbye = document.getElementById("saveGoodbye");
 
 const autoroleToggle = document.getElementById("autoroleToggle");
 const autoroleRole = document.getElementById("autoroleRole");
 const saveAutorole = document.getElementById("saveAutorole");
 
+const dailyToggle = document.getElementById("dailyToggle");
+const dailyMin = document.getElementById("dailyMin");
+const dailyMax = document.getElementById("dailyMax");
+const dailyCooldown = document.getElementById("dailyCooldown");
+const saveDaily = document.getElementById("saveDaily");
+
+const embedToggle = document.getElementById("embedToggle");
+const embedChannel = document.getElementById("embedChannel");
+const embedTitle = document.getElementById("embedTitle");
+const embedDescription = document.getElementById("embedDescription");
+const embedColor = document.getElementById("embedColor");
+const embedFooter = document.getElementById("embedFooter");
+const embedThumbnail = document.getElementById("embedThumbnail");
+const embedImage = document.getElementById("embedImage");
+const embedTimestamp = document.getElementById("embedTimestamp");
+const saveEmbed = document.getElementById("saveEmbed");
+
+const ticketToggle = document.getElementById("ticketToggle");
+const ticketCategory = document.getElementById("ticketCategory");
+const ticketSupportRole = document.getElementById("ticketSupportRole");
+const ticketPanelChannel = document.getElementById("ticketPanelChannel");
+const ticketMessage = document.getElementById("ticketMessage");
+const saveTicket = document.getElementById("saveTicket");
+
 const antilinkToggle = document.getElementById("antilinkToggle");
+const antilinkWarnToggle = document.getElementById("antilinkWarnToggle");
+const antilinkWarnMsg = document.getElementById("antilinkWarnMsg");
+const antilinkTimeout = document.getElementById("antilinkTimeout");
 const saveAntiLink = document.getElementById("saveAntiLink");
+
+const logsToggle = document.getElementById("logsToggle");
+const logsChannel = document.getElementById("logsChannel");
+const saveLogs = document.getElementById("saveLogs");
+
+const levelsToggle = document.getElementById("levelsToggle");
+const levelsMin = document.getElementById("levelsMin");
+const levelsMax = document.getElementById("levelsMax");
+const levelsCooldown = document.getElementById("levelsCooldown");
+const levelsChannel = document.getElementById("levelsChannel");
+const levelsMessage = document.getElementById("levelsMessage");
+const levelsRole = document.getElementById("levelsRole");
+const saveLevels = document.getElementById("saveLevels");
 
 const TOKEN_KEY = "aqua_discord_token";
 const SELECTED_GUILD_KEY = "aqua_selected_guild_id";
@@ -66,7 +112,7 @@ let currentGuildId = null;
 let currentChannels = [];
 let currentRoles = [];
 
-addBotBtn.href = ADD_BOT_URL;
+addBotBtn.href = "https://discord.com/oauth2/authorize?client_id=1403419829435760662&scope=bot%20applications.commands&permissions=8";
 loginBtn.href =
   `https://discord.com/oauth2/authorize?client_id=${CLIENT_ID}` +
   `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
@@ -106,20 +152,17 @@ function escapeHtml(value) {
 function getTokenFromHash() {
   const hash = window.location.hash;
   if (!hash || !hash.includes("access_token=")) return null;
-
   const params = new URLSearchParams(hash.slice(1));
   return params.get("access_token");
 }
 
 function getToken() {
   const fromHash = getTokenFromHash();
-
   if (fromHash) {
     localStorage.setItem(TOKEN_KEY, fromHash);
     window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
     return fromHash;
   }
-
   return localStorage.getItem(TOKEN_KEY);
 }
 
@@ -181,7 +224,6 @@ function renderUser(user) {
 
 function typeLabel(type) {
   const t = String(type || "").toLowerCase();
-
   if (t.includes("text")) return "Texto";
   if (t.includes("voice")) return "Voz";
   if (t.includes("category")) return "Categoria";
@@ -200,11 +242,7 @@ function renderChannels(channels) {
     return;
   }
 
-  const sorted = [...currentChannels].sort((a, b) => {
-    const pa = Number.isFinite(a.position) ? a.position : 0;
-    const pb = Number.isFinite(b.position) ? b.position : 0;
-    return pa - pb;
-  });
+  const sorted = [...currentChannels].sort((a, b) => (a.position || 0) - (b.position || 0));
 
   for (const channel of sorted) {
     const item = document.createElement("div");
@@ -231,11 +269,7 @@ function renderRoles(roles) {
     return;
   }
 
-  const sorted = [...currentRoles].sort((a, b) => {
-    const pa = Number.isFinite(a.position) ? a.position : 0;
-    const pb = Number.isFinite(b.position) ? b.position : 0;
-    return pb - pa;
-  });
+  const sorted = [...currentRoles].sort((a, b) => (b.position || 0) - (a.position || 0));
 
   for (const role of sorted) {
     const item = document.createElement("div");
@@ -253,7 +287,7 @@ function renderRoles(roles) {
   }
 }
 
-function fillChannelSelect(selectEl, channels, selectedId) {
+function fillChannelSelect(selectEl, channels, selectedId, mode = "text") {
   selectEl.innerHTML = "";
 
   const placeholder = document.createElement("option");
@@ -261,21 +295,18 @@ function fillChannelSelect(selectEl, channels, selectedId) {
   placeholder.textContent = "Seleciona um canal";
   selectEl.appendChild(placeholder);
 
-  const usableChannels = [...channels]
-    .filter((c) => !String(c.type || "").toLowerCase().includes("voice"))
-    .sort((a, b) => {
-      const pa = Number.isFinite(a.position) ? a.position : 0;
-      const pb = Number.isFinite(b.position) ? b.position : 0;
-      return pa - pb;
-    });
+  const filtered = (channels || []).filter((c) => {
+    const t = String(c.type || "").toLowerCase();
+    if (mode === "category") return t.includes("category");
+    if (mode === "text") return !t.includes("voice") && !t.includes("category");
+    return true;
+  });
 
-  for (const channel of usableChannels) {
+  for (const channel of filtered) {
     const option = document.createElement("option");
     option.value = channel.id;
-    option.textContent = `# ${channel.name || "Sem nome"}`;
-    if (String(channel.id) === String(selectedId)) {
-      option.selected = true;
-    }
+    option.textContent = mode === "category" ? channel.name || "Sem nome" : `# ${channel.name || "Sem nome"}`;
+    if (String(channel.id) === String(selectedId)) option.selected = true;
     selectEl.appendChild(option);
   }
 }
@@ -288,21 +319,13 @@ function fillRoleSelect(selectEl, roles, selectedId) {
   placeholder.textContent = "Seleciona um cargo";
   selectEl.appendChild(placeholder);
 
-  const usableRoles = [...roles]
-    .filter((r) => r.name !== "@everyone")
-    .sort((a, b) => {
-      const pa = Number.isFinite(a.position) ? a.position : 0;
-      const pb = Number.isFinite(b.position) ? b.position : 0;
-      return pb - pa;
-    });
+  const filtered = (roles || []).filter((r) => r.name !== "@everyone");
 
-  for (const role of usableRoles) {
+  for (const role of filtered) {
     const option = document.createElement("option");
     option.value = role.id;
     option.textContent = role.name || "Sem nome";
-    if (String(role.id) === String(selectedId)) {
-      option.selected = true;
-    }
+    if (String(role.id) === String(selectedId)) option.selected = true;
     selectEl.appendChild(option);
   }
 }
@@ -313,29 +336,18 @@ function setSelectedGuildCard(guildId) {
   });
 }
 
-function syncPreview() {
-  const welcomeSelected = currentChannels.find((c) => String(c.id) === String(welcomeChannel.value));
-  const goodbyeSelected = currentChannels.find((c) => String(c.id) === String(goodbyeChannel.value));
-
-  if (welcomeSelected) {
-    welcomePreviewText(welcomeSelected.name);
+async function saveSection(payload) {
+  if (!currentGuildId) {
+    alert("Seleciona primeiro um servidor.");
+    return;
   }
 
-  if (goodbyeSelected) {
-    goodbyePreviewText(goodbyeSelected.name);
-  }
-}
-
-function welcomePreviewText(text) {
-  const el = document.getElementById("selectedGuildName");
-  if (el) return;
-  return text;
-}
-
-function goodbyePreviewText(text) {
-  const el = document.getElementById("selectedGuildId");
-  if (el) return;
-  return text;
+  await setDoc(doc(db, "guilds", String(currentGuildId)), payload, { merge: true });
+  alert("Guardado com sucesso.");
+  await loadGuildFromFirebase({
+    id: currentGuildId,
+    name: selectedGuildName.textContent || "Servidor"
+  });
 }
 
 async function loadGuildFromFirebase(guild) {
@@ -354,9 +366,16 @@ async function loadGuildFromFirebase(guild) {
       syncedState.textContent = "Este servidor ainda não foi sincronizado pelo bot.";
       emptyState(channelsDiv, "Ainda não há canais guardados.");
       emptyState(rolesDiv, "Ainda não há cargos guardados.");
-      fillChannelSelect(welcomeChannel, [], "");
-      fillChannelSelect(goodbyeChannel, [], "");
+      fillChannelSelect(welcomeChannel, [], "", "text");
+      fillChannelSelect(goodbyeChannel, [], "", "text");
+      fillChannelSelect(embedChannel, [], "", "text");
+      fillChannelSelect(ticketPanelChannel, [], "", "text");
+      fillChannelSelect(logsChannel, [], "", "text");
+      fillChannelSelect(levelsChannel, [], "", "text");
+      fillChannelSelect(ticketCategory, [], "", "category");
       fillRoleSelect(autoroleRole, [], "");
+      fillRoleSelect(ticketSupportRole, [], "");
+      fillRoleSelect(levelsRole, [], "");
       return;
     }
 
@@ -374,51 +393,71 @@ async function loadGuildFromFirebase(guild) {
     syncedState.textContent = `Última sincronização: ${updatedAt}`;
 
     const welcome = data.config?.welcome || {};
-    const goodbye = data.config?.goodbye || {};
-    const autorole = data.config?.autorole || {};
-    const antilink = data.config?.antilink || {};
-
     welcomeToggle.checked = Boolean(welcome.enabled);
+    welcomeEmbedToggle.checked = Boolean(welcome.useEmbed);
+    fillChannelSelect(welcomeChannel, channels, welcome.channelId || "", "text");
+    welcomeTitle.value = welcome.title || "Bem-vindo!";
     welcomeMsg.value = welcome.message || "Bem-vindo {mention} ao {server}!";
+    welcomeColor.value = welcome.color || "57f287";
+    welcomeFooter.value = welcome.footer || "AQUA";
+    welcomeThumbnail.value = welcome.thumbnail || "";
+
+    const goodbye = data.config?.goodbye || {};
     goodbyeToggle.checked = Boolean(goodbye.enabled);
+    goodbyeEmbedToggle.checked = Boolean(goodbye.useEmbed);
+    fillChannelSelect(goodbyeChannel, channels, goodbye.channelId || "", "text");
+    goodbyeTitle.value = goodbye.title || "Até já!";
     goodbyeMsg.value = goodbye.message || "Até logo {user}, volta sempre!";
+    goodbyeColor.value = goodbye.color || "ff5a6a";
+    goodbyeFooter.value = goodbye.footer || "AQUA";
+    goodbyeThumbnail.value = goodbye.thumbnail || "";
+
+    const autorole = data.config?.autorole || {};
     autoroleToggle.checked = Boolean(autorole.enabled);
-    antilinkToggle.checked = Boolean(antilink.enabled);
-
-    fillChannelSelect(welcomeChannel, channels, welcome.channelId || "");
-    fillChannelSelect(goodbyeChannel, channels, goodbye.channelId || "");
     fillRoleSelect(autoroleRole, roles, autorole.roleId || "");
 
-    const welcomeSelected = channels.find((c) => String(c.id) === String(welcome.channelId));
-    const goodbyeSelected = channels.find((c) => String(c.id) === String(goodbye.channelId));
+    const daily = data.config?.daily || {};
+    dailyToggle.checked = Boolean(daily.enabled);
+    dailyMin.value = daily.min ?? 50;
+    dailyMax.value = daily.max ?? 150;
+    dailyCooldown.value = daily.cooldownHours ?? 24;
 
-    document.getElementById("guildCount").textContent = document.getElementById("guildCount").textContent || "0";
+    const customEmbed = data.config?.embeds?.custom || {};
+    embedToggle.checked = Boolean(customEmbed.enabled);
+    fillChannelSelect(embedChannel, channels, customEmbed.channelId || "", "text");
+    embedTitle.value = customEmbed.title || "";
+    embedDescription.value = customEmbed.description || "";
+    embedColor.value = customEmbed.color || "5865f2";
+    embedFooter.value = customEmbed.footer || "";
+    embedThumbnail.value = customEmbed.thumbnail || "";
+    embedImage.value = customEmbed.image || "";
+    embedTimestamp.checked = Boolean(customEmbed.timestamp);
 
-    const welcomeState = document.getElementById("welcomeState");
-    const goodbyeState = document.getElementById("goodbyeState");
+    const ticket = data.config?.ticket || {};
+    ticketToggle.checked = Boolean(ticket.enabled);
+    fillChannelSelect(ticketPanelChannel, channels, ticket.panelChannelId || "", "text");
+    fillChannelSelect(ticketCategory, channels, ticket.categoryId || "", "category");
+    fillRoleSelect(ticketSupportRole, roles, ticket.supportRoleId || "");
+    ticketMessage.value = ticket.message || "Abre um ticket para falar connosco!";
 
-    if (welcomeState) {
-      welcomeState.textContent = welcomeSelected ? `#${welcomeSelected.name}` : "-";
-    }
+    const antiLink = data.config?.antilink || {};
+    antilinkToggle.checked = Boolean(antiLink.enabled);
+    antilinkWarnToggle.checked = Boolean(antiLink.warn);
+    antilinkWarnMsg.value = antiLink.warnMessage || "Links não são permitidos aqui, {mention}.";
+    antilinkTimeout.value = antiLink.timeoutSeconds ?? 0;
 
-    if (goodbyeState) {
-      goodbyeState.textContent = goodbyeSelected ? `#${goodbyeSelected.name}` : "-";
-    }
+    const logs = data.config?.logs || {};
+    logsToggle.checked = Boolean(logs.enabled);
+    fillChannelSelect(logsChannel, channels, logs.channelId || "", "text");
 
-    const previewWelcome = document.getElementById("welcomePreview");
-    const previewGoodbye = document.getElementById("goodbyePreview");
-
-    if (previewWelcome) {
-      previewWelcome.textContent = welcomeSelected ? `#${welcomeSelected.name}` : "Nenhum";
-    }
-
-    if (previewGoodbye) {
-      previewGoodbye.textContent = goodbyeSelected ? `#${goodbyeSelected.name}` : "Nenhum";
-    }
-
-    fillChannelSelect(welcomeChannel, channels, welcome.channelId || "");
-    fillChannelSelect(goodbyeChannel, channels, goodbye.channelId || "");
-    fillRoleSelect(autoroleRole, roles, autorole.roleId || "");
+    const levels = data.config?.levels || {};
+    levelsToggle.checked = Boolean(levels.enabled);
+    levelsMin.value = levels.xpMin ?? 5;
+    levelsMax.value = levels.xpMax ?? 15;
+    levelsCooldown.value = levels.cooldownSeconds ?? 60;
+    fillChannelSelect(levelsChannel, channels, levels.levelUpChannelId || "", "text");
+    levelsMessage.value = levels.levelUpMessage || "Parabéns {user}, subiste para o nível {level}!";
+    fillRoleSelect(levelsRole, roles, levels.roleRewardId || "");
 
   } catch (error) {
     console.error(error);
@@ -462,104 +501,54 @@ function renderGuilds(guilds) {
   }
 }
 
-async function saveConfig(section) {
-  if (!currentGuildId) {
-    alert("Seleciona primeiro um servidor.");
-    return;
-  }
-
-  const ref = doc(db, "guilds", String(currentGuildId));
-  const payload = { config: {} };
-
-  if (section === "welcome") {
-    payload.config.welcome = {
-      enabled: welcomeToggle.checked,
-      channelId: welcomeChannel.value,
-      message: welcomeMsg.value.trim(),
-      useEmbed: true
-    };
-  }
-
-  if (section === "goodbye") {
-    payload.config.goodbye = {
-      enabled: goodbyeToggle.checked,
-      channelId: goodbyeChannel.value,
-      message: goodbyeMsg.value.trim(),
-      useEmbed: true
-    };
-  }
-
-  if (section === "autorole") {
-    payload.config.autorole = {
-      enabled: autoroleToggle.checked,
-      roleId: autoroleRole.value
-    };
-  }
-
-  if (section === "antilink") {
-    payload.config.antilink = {
-      enabled: antilinkToggle.checked
-    };
-  }
-
-  await setDoc(ref, payload, { merge: true });
-  await loadGuildFromFirebase({
-    id: currentGuildId,
-    name: selectedGuildName.textContent || "Servidor"
-  });
-
-  alert("Guardado com sucesso.");
-}
-
-saveWelcome.addEventListener("click", () => saveConfig("welcome"));
-saveGoodbye.addEventListener("click", () => saveConfig("goodbye"));
-saveAutorole.addEventListener("click", () => saveConfig("autorole"));
-saveAntiLink.addEventListener("click", () => saveConfig("antilink"));
-
-async function initDashboard(token) {
-  showDashboard();
-
-  try {
-    const user = await getUser(token);
-    renderUser(user);
-
-    const guilds = await getGuilds(token);
-    const ownedGuilds = guilds.filter((guild) => guild.owner);
-
-    renderGuilds(ownedGuilds);
-
-    const lastGuildId = localStorage.getItem(SELECTED_GUILD_KEY);
-    const initialGuild =
-      ownedGuilds.find((guild) => guild.id === lastGuildId) || ownedGuilds[0];
-
-    if (initialGuild) {
-      setSelectedGuildCard(initialGuild.id);
-      await loadGuildFromFirebase(initialGuild);
-    } else {
-      selectedGuildName.textContent = "Nenhum servidor encontrado";
-      selectedGuildId.textContent = "-";
-      emptyState(channelsDiv, "Sem servidores.");
-      emptyState(rolesDiv, "Sem servidores.");
-      syncedState.textContent = "Sem servidores para mostrar.";
+saveWelcome.addEventListener("click", async () => {
+  await saveSection({
+    config: {
+      welcome: {
+        enabled: welcomeToggle.checked,
+        useEmbed: welcomeEmbedToggle.checked,
+        channelId: welcomeChannel.value,
+        title: welcomeTitle.value.trim(),
+        message: welcomeMsg.value.trim(),
+        color: welcomeColor.value.trim(),
+        footer: welcomeFooter.value.trim(),
+        thumbnail: welcomeThumbnail.value.trim()
+      }
     }
-  } catch (error) {
-    console.error(error);
-    localStorage.removeItem(TOKEN_KEY);
-    showLanding();
-  }
-}
+  });
+});
 
-async function init() {
-  const token = getToken();
+saveGoodbye.addEventListener("click", async () => {
+  await saveSection({
+    config: {
+      goodbye: {
+        enabled: goodbyeToggle.checked,
+        useEmbed: goodbyeEmbedToggle.checked,
+        channelId: goodbyeChannel.value,
+        title: goodbyeTitle.value.trim(),
+        message: goodbyeMsg.value.trim(),
+        color: goodbyeColor.value.trim(),
+        footer: goodbyeFooter.value.trim(),
+        thumbnail: goodbyeThumbnail.value.trim()
+      }
+    }
+  });
+});
 
-  if (!token) {
-    showLanding();
-    return;
-  }
+saveAutorole.addEventListener("click", async () => {
+  await saveSection({
+    config: {
+      autorole: {
+        enabled: autoroleToggle.checked,
+        roleId: autoroleRole.value
+      }
+    }
+  });
+});
 
-  await initDashboard(token);
-}
-
-logoutBtn.addEventListener("click", logout);
-
-init();
+saveDaily.addEventListener("click", async () => {
+  await saveSection({
+    config: {
+      daily: {
+        enabled: dailyToggle.checked,
+        min: Number(dailyMin
