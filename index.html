@@ -29,7 +29,7 @@
           <h2>Controla o teu servidor Discord com estilo.</h2>
           <p>
             Sistema de boas-vindas, saídas, autorole, anti-link, economia,
-            mini jogos, logs e muito mais.
+            mini jogos, logs, tickets, níveis, embeds e muito mais.
           </p>
 
           <div class="hero-buttons">
@@ -139,11 +139,28 @@
               <span>Ativar sistema</span>
             </label>
 
+            <label class="switch-row">
+              <input type="checkbox" id="welcomeEmbedToggle">
+              <span>Usar embed</span>
+            </label>
+
             <label>Canal</label>
             <select id="welcomeChannel"></select>
 
+            <label>Título</label>
+            <input type="text" id="welcomeTitle" placeholder="Bem-vindo!">
+
             <label>Mensagem</label>
             <input type="text" id="welcomeMsg" placeholder="Bem-vindo {mention} ao {server}">
+
+            <label>Cor (hex sem #)</label>
+            <input type="text" id="welcomeColor" placeholder="57f287">
+
+            <label>Footer</label>
+            <input type="text" id="welcomeFooter" placeholder="AQUA">
+
+            <label>Thumbnail URL</label>
+            <input type="text" id="welcomeThumbnail" placeholder="https://...">
 
             <button id="saveWelcome" class="save-btn" type="button">Guardar</button>
           </div>
@@ -160,11 +177,28 @@
               <span>Ativar sistema</span>
             </label>
 
+            <label class="switch-row">
+              <input type="checkbox" id="goodbyeEmbedToggle">
+              <span>Usar embed</span>
+            </label>
+
             <label>Canal</label>
             <select id="goodbyeChannel"></select>
 
+            <label>Título</label>
+            <input type="text" id="goodbyeTitle" placeholder="Até já!">
+
             <label>Mensagem</label>
-            <input type="text" id="goodbyeMsg" placeholder="Até logo {user}">
+            <input type="text" id="goodbyeMsg" placeholder="Até logo {user}, volta sempre!">
+
+            <label>Cor (hex sem #)</label>
+            <input type="text" id="goodbyeColor" placeholder="ff5a6a">
+
+            <label>Footer</label>
+            <input type="text" id="goodbyeFooter" placeholder="AQUA">
+
+            <label>Thumbnail URL</label>
+            <input type="text" id="goodbyeThumbnail" placeholder="https://...">
 
             <button id="saveGoodbye" class="save-btn" type="button">Guardar</button>
           </div>
@@ -190,6 +224,98 @@
 
         <div class="panel">
           <div class="panel-header">
+            <h2>Daily</h2>
+          </div>
+
+          <div class="form">
+            <label class="switch-row">
+              <input type="checkbox" id="dailyToggle">
+              <span>Ativar daily por site</span>
+            </label>
+
+            <label>Recompensa mínima</label>
+            <input type="number" id="dailyMin" min="1" value="50">
+
+            <label>Recompensa máxima</label>
+            <input type="number" id="dailyMax" min="1" value="150">
+
+            <label>Cooldown em horas</label>
+            <input type="number" id="dailyCooldown" min="1" value="24">
+
+            <button id="saveDaily" class="save-btn" type="button">Guardar</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <h2>Embed personalizada</h2>
+          </div>
+
+          <div class="form">
+            <label class="switch-row">
+              <input type="checkbox" id="embedToggle">
+              <span>Ativar embed personalizada</span>
+            </label>
+
+            <label>Canal</label>
+            <select id="embedChannel"></select>
+
+            <label>Título</label>
+            <input type="text" id="embedTitle" placeholder="Título do embed">
+
+            <label>Descrição</label>
+            <input type="text" id="embedDescription" placeholder="Mensagem do embed">
+
+            <label>Cor (hex sem #)</label>
+            <input type="text" id="embedColor" placeholder="5865f2">
+
+            <label>Footer</label>
+            <input type="text" id="embedFooter" placeholder="AQUA">
+
+            <label>Thumbnail URL</label>
+            <input type="text" id="embedThumbnail" placeholder="https://...">
+
+            <label>Image URL</label>
+            <input type="text" id="embedImage" placeholder="https://...">
+
+            <label class="switch-row">
+              <input type="checkbox" id="embedTimestamp">
+              <span>Mostrar timestamp</span>
+            </label>
+
+            <button id="saveEmbed" class="save-btn" type="button">Guardar</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <h2>Tickets</h2>
+          </div>
+
+          <div class="form">
+            <label class="switch-row">
+              <input type="checkbox" id="ticketToggle">
+              <span>Ativar tickets</span>
+            </label>
+
+            <label>Categoria</label>
+            <select id="ticketCategory"></select>
+
+            <label>Cargo de suporte</label>
+            <select id="ticketSupportRole"></select>
+
+            <label>Canal do painel</label>
+            <select id="ticketPanelChannel"></select>
+
+            <label>Mensagem do painel</label>
+            <input type="text" id="ticketMessage" placeholder="Abre um ticket para falar connosco!">
+
+            <button id="saveTicket" class="save-btn" type="button">Guardar</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
             <h2>Anti-Link</h2>
           </div>
 
@@ -199,7 +325,69 @@
               <span>Bloquear links</span>
             </label>
 
+            <label class="switch-row">
+              <input type="checkbox" id="antilinkWarnToggle">
+              <span>Enviar aviso em embed</span>
+            </label>
+
+            <label>Mensagem de aviso</label>
+            <input type="text" id="antilinkWarnMsg" placeholder="Links não são permitidos aqui, {mention}.">
+
+            <label>Timeout automático (segundos)</label>
+            <input type="number" id="antilinkTimeout" min="0" value="0">
+
             <button id="saveAntiLink" class="save-btn" type="button">Guardar</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <h2>Logs</h2>
+          </div>
+
+          <div class="form">
+            <label class="switch-row">
+              <input type="checkbox" id="logsToggle">
+              <span>Ativar logs</span>
+            </label>
+
+            <label>Canal de logs</label>
+            <select id="logsChannel"></select>
+
+            <button id="saveLogs" class="save-btn" type="button">Guardar</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <h2>Níveis / XP</h2>
+          </div>
+
+          <div class="form">
+            <label class="switch-row">
+              <input type="checkbox" id="levelsToggle">
+              <span>Ativar níveis</span>
+            </label>
+
+            <label>XP mínima por mensagem</label>
+            <input type="number" id="levelsMin" min="1" value="5">
+
+            <label>XP máxima por mensagem</label>
+            <input type="number" id="levelsMax" min="1" value="15">
+
+            <label>Cooldown em segundos</label>
+            <input type="number" id="levelsCooldown" min="1" value="60">
+
+            <label>Canal de level up</label>
+            <select id="levelsChannel"></select>
+
+            <label>Mensagem de level up</label>
+            <input type="text" id="levelsMessage" placeholder="Parabéns {user}, subiste para o nível {level}!">
+
+            <label>Cargo de recompensa</label>
+            <select id="levelsRole"></select>
+
+            <button id="saveLevels" class="save-btn" type="button">Guardar</button>
           </div>
         </div>
       </section>
@@ -208,4 +396,4 @@
 
   <script type="module" src="script.js"></script>
 </body>
-      </html>
+  </html>
