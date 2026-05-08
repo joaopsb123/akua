@@ -6,20 +6,11 @@ import {
   setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-/* =========================
-   CONFIG
-========================= */
-
 const CLIENT_ID = "1447995914290594056";
 const REDIRECT_URI = "https://akua-lake.vercel.app/";
 
 const ADD_BOT_URL =
   "https://discord.com/oauth2/authorize?client_id=1403419829435760662&scope=bot%20applications.commands&permissions=8";
-
-const LOGIN_SCOPE = "identify email guilds";
-
-const TOKEN_KEY = "aqua_discord_token";
-const SELECTED_GUILD_KEY = "aqua_selected_guild_id";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDJ_FRnNVJYOPbKUQZpx43WgYmqA-u-CB0",
@@ -32,10 +23,6 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-
-/* =========================
-   ELEMENTOS
-========================= */
 
 const landing = document.getElementById("landing");
 const dashboard = document.getElementById("dashboard");
@@ -72,32 +59,42 @@ const saveAutorole = document.getElementById("saveAutorole");
 const antilinkToggle = document.getElementById("antilinkToggle");
 const saveAntiLink = document.getElementById("saveAntiLink");
 
+const claimDailyBtn = document.getElementById("claimDailyBtn");
+
+const TOKEN_KEY = "aqua_discord_token";
+const SELECTED_GUILD_KEY = "aqua_selected_guild_id";
+
 let currentGuildId = null;
 let currentChannels = [];
 let currentRoles = [];
 
-/* =========================
-   LOGIN URL
-========================= */
-
-const discordLoginURL =
-  `https://discord.com/oauth2/authorize` +
-  `?client_id=${CLIENT_ID}` +
+addBotBtn.href = ADD_BOT_URL;
+loginBtn.href =
+  `https://discord.com/oauth2/authorize?client_id=${CLIENT_ID}` +
   `&response_type=token` +
   `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
-  `&scope=${encodeURIComponent(LOGIN_SCOPE)}`;
+  `&scope=${encodeURIComponent("identify email guilds")}`;
 
-if (loginBtn) {
-  loginBtn.href = discordLoginURL;
+goDashboardBtn.addEventListener("click", (e) => {
+  e.preventDefault();
+  const token = getToken();
+  if (token) {
+    showDashboard();
+    initDashboard(token);
+  } else {
+    loginBtn.click();
+  }
+});
+
+function showLanding() {
+  landing.classList.remove("hidden");
+  dashboard.classList.add("hidden");
 }
 
-if (addBotBtn) {
-  addBotBtn.href = ADD_BOT_URL;
+function showDashboard() {
+  landing.classList.add("hidden");
+  dashboard.classList.remove("hidden");
 }
-
-/* =========================
-   HELPERS
-========================= */
 
 function escapeHtml(value) {
   return String(value)
@@ -111,31 +108,18 @@ function escapeHtml(value) {
 function getTokenFromHash() {
   const hash = window.location.hash;
   if (!hash || !hash.includes("access_token=")) return null;
-
   const params = new URLSearchParams(hash.slice(1));
   return params.get("access_token");
 }
 
 function getToken() {
   const fromHash = getTokenFromHash();
-
   if (fromHash) {
     localStorage.setItem(TOKEN_KEY, fromHash);
     window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
     return fromHash;
   }
-
   return localStorage.getItem(TOKEN_KEY);
-}
-
-function showLanding() {
-  if (landing) landing.classList.remove("hidden");
-  if (dashboard) dashboard.classList.add("hidden");
-}
-
-function showDashboard() {
-  if (landing) landing.classList.add("hidden");
-  if (dashboard) dashboard.classList.remove("hidden");
 }
 
 function logout() {
@@ -145,9 +129,7 @@ function logout() {
   showLanding();
 }
 
-if (logoutBtn) {
-  logoutBtn.addEventListener("click", logout);
-}
+logoutBtn.addEventListener("click", logout);
 
 function defaultUserAvatar(user) {
   const discriminator = Number(user?.discriminator || 0);
@@ -183,10 +165,6 @@ async function api(path, token) {
 const getUser = (token) => api("/users/@me", token);
 const getGuilds = (token) => api("/users/@me/guilds", token);
 
-/* =========================
-   USER
-========================= */
-
 function renderUser(user) {
   if (!userBox) return;
 
@@ -203,13 +181,8 @@ function renderUser(user) {
   `;
 }
 
-/* =========================
-   CHANNELS / ROLES
-========================= */
-
 function typeLabel(type) {
   const t = String(type || "").toLowerCase();
-
   if (t.includes("text")) return "Texto";
   if (t.includes("voice")) return "Voz";
   if (t.includes("category")) return "Categoria";
@@ -297,7 +270,6 @@ function renderChannels(channels) {
   for (const channel of sorted) {
     const item = document.createElement("div");
     item.className = "list-item";
-
     item.innerHTML = `
       <div class="list-icon">#</div>
       <div>
@@ -305,7 +277,6 @@ function renderChannels(channels) {
         <div class="list-sub">Tipo: ${escapeHtml(typeLabel(channel.type))} · ID: ${escapeHtml(channel.id || "")}</div>
       </div>
     `;
-
     channelsDiv.appendChild(item);
   }
 }
@@ -330,7 +301,6 @@ function renderRoles(roles) {
   for (const role of sorted) {
     const item = document.createElement("div");
     item.className = "list-item";
-
     item.innerHTML = `
       <div class="list-icon">@</div>
       <div>
@@ -338,21 +308,77 @@ function renderRoles(roles) {
         <div class="list-sub">Permissões: ${escapeHtml(role.permissions || "0")} · ID: ${escapeHtml(role.id || "")}</div>
       </div>
     `;
-
     rolesDiv.appendChild(item);
   }
 }
 
-/* =========================
-   GUILDS
-========================= */
+function setSelectedGuildCard(guildId) {
+  document.querySelectorAll(".guild-card").forEach((card) => {
+    card.classList.toggle("selected", card.dataset.guildId === guildId);
+  });
+}
 
-function guildIcon(guild) {
-  if (guild.icon) {
-    return `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png`;
+async function loadGuildFromFirebase(guild) {
+  currentGuildId = guild.id;
+  if (selectedGuildName) selectedGuildName.textContent = guild.name;
+  if (selectedGuildId) selectedGuildId.textContent = guild.id;
+  if (syncedState) syncedState.textContent = "A ler dados do Firebase...";
+
+  if (channelsDiv) channelsDiv.innerHTML = `<div class="empty">A carregar canais...</div>`;
+  if (rolesDiv) rolesDiv.innerHTML = `<div class="empty">A carregar cargos...</div>`;
+
+  try {
+    const snap = await getDoc(doc(db, "guilds", String(guild.id).trim()));
+
+    if (!snap.exists()) {
+      if (syncedState) syncedState.textContent = "Este servidor ainda não foi sincronizado pelo bot.";
+      emptyState(channelsDiv, "Ainda não há canais guardados.");
+      emptyState(rolesDiv, "Ainda não há cargos guardados.");
+      fillChannelSelect(welcomeChannel, [], "");
+      fillChannelSelect(goodbyeChannel, [], "");
+      fillRoleSelect(autoroleRole, [], "");
+      return;
+    }
+
+    const data = snap.data();
+    const channels = Array.isArray(data.channels) ? data.channels : [];
+    const roles = Array.isArray(data.roles) ? data.roles : [];
+
+    renderChannels(channels);
+    renderRoles(roles);
+
+    const updatedAt = data.updatedAt
+      ? new Date(data.updatedAt).toLocaleString("pt-PT")
+      : "sem data";
+
+    if (syncedState) syncedState.textContent = `Última sincronização: ${updatedAt}`;
+
+    const welcome = data.config?.welcome || {};
+    const goodbye = data.config?.goodbye || {};
+    const autorole = data.config?.autorole || {};
+    const antilink = data.config?.antilink || {};
+
+    if (welcomeToggle) welcomeToggle.checked = Boolean(welcome.enabled);
+    if (welcomeChannel) fillChannelSelect(welcomeChannel, channels, welcome.channelId || "");
+    if (welcomeMsg) welcomeMsg.value = welcome.message || "Bem-vindo {mention} ao {server}!";
+
+    if (goodbyeToggle) goodbyeToggle.checked = Boolean(goodbye.enabled);
+    if (goodbyeChannel) fillChannelSelect(goodbyeChannel, channels, goodbye.channelId || "");
+    if (goodbyeMsg) goodbyeMsg.value = goodbye.message || "Até logo {user}, volta sempre!";
+
+    if (autoroleToggle) autoroleToggle.checked = Boolean(autorole.enabled);
+    if (autoroleRole) fillRoleSelect(autoroleRole, roles, autorole.roleId || "");
+
+    if (antilinkToggle) antilinkToggle.checked = Boolean(antilink.enabled);
+
+    currentChannels = channels;
+    currentRoles = roles;
+  } catch (error) {
+    console.error(error);
+    if (syncedState) syncedState.textContent = "Erro ao carregar o Firebase.";
+    emptyState(channelsDiv, "Erro ao carregar canais.");
+    emptyState(rolesDiv, "Erro ao carregar cargos.");
   }
-
-  return "https://cdn-icons-png.flaticon.com/512/5968/5968756.png";
 }
 
 function renderGuilds(guilds) {
@@ -368,194 +394,134 @@ function renderGuilds(guilds) {
 
   if (guildCount) guildCount.textContent = `${guilds.length}`;
 
-  guilds.forEach((guild) => {
-    const div = document.createElement("div");
-    div.className = "guild-card";
-    div.dataset.guildId = guild.id;
+  for (const guild of guilds) {
+    const card = document.createElement("div");
+    card.className = "guild-card";
+    card.dataset.guildId = guild.id;
 
-    div.innerHTML = `
-      <img class="guild-icon" src="${guildIcon(guild)}" alt="Ícone de ${escapeHtml(guild.name)}">
+    card.innerHTML = `
+      <img src="${guildIconUrl(guild)}" alt="Ícone de ${escapeHtml(guild.name)}">
       <div class="guild-info">
         <div class="guild-name">${escapeHtml(guild.name)}</div>
         <div class="guild-id">${escapeHtml(guild.id)}</div>
       </div>
     `;
 
-    div.onclick = async () => {
+    card.addEventListener("click", async () => {
       localStorage.setItem(SELECTED_GUILD_KEY, guild.id);
       setSelectedGuildCard(guild.id);
-      await loadGuild(guild);
-    };
+      await loadGuildFromFirebase(guild);
+    });
 
-    guildsDiv.appendChild(div);
-  });
-}
-
-function setSelectedGuildCard(guildId) {
-  document.querySelectorAll(".guild-card").forEach((card) => {
-    card.classList.toggle("selected", card.dataset.guildId === guildId);
-  });
-}
-
-/* =========================
-   GUILD LOAD
-========================= */
-
-async function loadGuild(guild) {
-  if (selectedGuildName) selectedGuildName.textContent = guild.name;
-  if (selectedGuildId) selectedGuildId.textContent = guild.id;
-
-  if (channelsDiv) channelsDiv.innerHTML = "A carregar...";
-  if (rolesDiv) rolesDiv.innerHTML = "A carregar...";
-
-  currentGuildId = guild.id;
-
-  try {
-    const guildRef = doc(db, "guilds", guild.id);
-    const snap = await getDoc(guildRef);
-
-    if (!snap.exists()) {
-      emptyState(channelsDiv, "Bot ainda não sincronizou.");
-      emptyState(rolesDiv, "Bot ainda não sincronizou.");
-      fillChannelSelect(welcomeChannel, [], "");
-      fillChannelSelect(goodbyeChannel, [], "");
-      fillRoleSelect(autoroleRole, [], "");
-      return;
-    }
-
-    const data = snap.data();
-
-    renderChannels(data.channels || []);
-    renderRoles(data.roles || []);
-    loadSettings(data);
-  } catch (err) {
-    console.error(err);
-    emptyState(channelsDiv, "Erro ao carregar.");
-    emptyState(rolesDiv, "Erro ao carregar.");
+    guildsDiv.appendChild(card);
   }
 }
 
-/* =========================
-   SETTINGS
-========================= */
+async function saveConfig(section) {
+  if (!currentGuildId) {
+    alert("Seleciona primeiro um servidor.");
+    return;
+  }
 
-function loadSettings(data) {
-  const welcome = data?.config?.welcome || {};
-  const goodbye = data?.config?.goodbye || {};
-  const autorole = data?.config?.autorole || {};
-  const antiLink = data?.config?.antilink || {};
+  const ref = doc(db, "guilds", String(currentGuildId));
+  const payload = { config: {} };
 
-  if (welcomeToggle) welcomeToggle.checked = Boolean(welcome.enabled);
-  if (welcomeChannel) fillChannelSelect(welcomeChannel, data.channels || [], welcome.channelId || "");
-  if (welcomeMsg) welcomeMsg.value = welcome.message || "";
+  if (section === "welcome") {
+    payload.config.welcome = {
+      enabled: welcomeToggle?.checked || false,
+      channelId: welcomeChannel?.value || "",
+      message: welcomeMsg?.value || "",
+      useEmbed: true
+    };
+  }
 
-  if (goodbyeToggle) goodbyeToggle.checked = Boolean(goodbye.enabled);
-  if (goodbyeChannel) fillChannelSelect(goodbyeChannel, data.channels || [], goodbye.channelId || "");
-  if (goodbyeMsg) goodbyeMsg.value = goodbye.message || "";
+  if (section === "goodbye") {
+    payload.config.goodbye = {
+      enabled: goodbyeToggle?.checked || false,
+      channelId: goodbyeChannel?.value || "",
+      message: goodbyeMsg?.value || "",
+      useEmbed: true
+    };
+  }
 
-  if (autoroleToggle) autoroleToggle.checked = Boolean(autorole.enabled);
-  if (autoroleRole) fillRoleSelect(autoroleRole, data.roles || [], autorole.roleId || "");
+  if (section === "autorole") {
+    payload.config.autorole = {
+      enabled: autoroleToggle?.checked || false,
+      roleId: autoroleRole?.value || ""
+    };
+  }
 
-  if (antilinkToggle) antilinkToggle.checked = Boolean(antiLink.enabled);
+  if (section === "antilink") {
+    payload.config.antilink = {
+      enabled: antilinkToggle?.checked || false
+    };
+  }
+
+  await setDoc(ref, payload, { merge: true });
+  await loadGuildFromFirebase({
+    id: currentGuildId,
+    name: selectedGuildName?.textContent || "Servidor"
+  });
+
+  alert("Guardado com sucesso.");
 }
 
-async function updateGuildData(payload) {
-  const guildId = localStorage.getItem(SELECTED_GUILD_KEY) || currentGuildId;
-  if (!guildId) return;
+if (saveWelcome) saveWelcome.addEventListener("click", () => saveConfig("welcome"));
+if (saveGoodbye) saveGoodbye.addEventListener("click", () => saveConfig("goodbye"));
+if (saveAutorole) saveAutorole.addEventListener("click", () => saveConfig("autorole"));
+if (saveAntiLink) saveAntiLink.addEventListener("click", () => saveConfig("antilink"));
 
-  const guildRef = doc(db, "guilds", guildId);
-  await setDoc(guildRef, payload, { merge: true });
-}
+/* DAILY */
 
-/* =========================
-   SAVE BUTTONS
-========================= */
-
-if (saveWelcome) {
-  saveWelcome.onclick = async () => {
-    await updateGuildData({
-      config: {
-        welcome: {
-          enabled: welcomeToggle?.checked || false,
-          channelId: welcomeChannel?.value || "",
-          message: welcomeMsg?.value || "",
-          useEmbed: true
-        }
-      }
-    });
-
-    alert("Boas-vindas salvo.");
-  };
-}
-
-if (saveGoodbye) {
-  saveGoodbye.onclick = async () => {
-    await updateGuildData({
-      config: {
-        goodbye: {
-          enabled: goodbyeToggle?.checked || false,
-          channelId: goodbyeChannel?.value || "",
-          message: goodbyeMsg?.value || "",
-          useEmbed: true
-        }
-      }
-    });
-
-    alert("Saídas salvo.");
-  };
-}
-
-if (saveAutorole) {
-  saveAutorole.onclick = async () => {
-    await updateGuildData({
-      config: {
-        autorole: {
-          enabled: autoroleToggle?.checked || false,
-          roleId: autoroleRole?.value || ""
-        }
-      }
-    });
-
-    alert("Autorole salvo.");
-  };
-}
-
-if (saveAntiLink) {
-  saveAntiLink.onclick = async () => {
-    await updateGuildData({
-      config: {
-        antilink: {
-          enabled: antilinkToggle?.checked || false
-        }
-      }
-    });
-
-    alert("Anti-link atualizado.");
-  };
-}
-
-/* =========================
-   NAV
-========================= */
-
-if (goDashboardBtn) {
-  goDashboardBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-
+if (claimDailyBtn) {
+  claimDailyBtn.onclick = async () => {
     const token = getToken();
 
-    if (token) {
-      showDashboard();
-      initDashboard(token);
-    } else if (loginBtn) {
-      loginBtn.click();
+    if (!token) {
+      alert("Faz login primeiro.");
+      return;
     }
-  });
+
+    try {
+      const user = await getUser(token);
+      const dailyRef = doc(db, "economy", user.id);
+      const dailySnap = await getDoc(dailyRef);
+
+      let coins = 0;
+      let lastDaily = 0;
+
+      if (dailySnap.exists()) {
+        coins = dailySnap.data().coins || 0;
+        lastDaily = dailySnap.data().lastDaily || 0;
+      }
+
+      const now = Date.now();
+      const cooldown = 24 * 60 * 60 * 1000;
+
+      if (now - lastDaily < cooldown) {
+        const left = cooldown - (now - lastDaily);
+        const hours = Math.floor(left / 1000 / 60 / 60);
+        const minutes = Math.floor((left % (1000 * 60 * 60)) / 1000 / 60);
+        alert(`Já pegaste o daily.\nVolta em ${hours}h ${minutes}m`);
+        return;
+      }
+
+      coins += 500;
+
+      await setDoc(dailyRef, {
+        coins,
+        lastDaily: now
+      }, { merge: true });
+
+      alert("Recebeste 500 moedas.");
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao pegar daily.");
+    }
+  };
 }
 
-/* =========================
-   INIT
-========================= */
+/* AUTH / INIT */
 
 async function initDashboard(token) {
   showDashboard();
@@ -575,7 +541,7 @@ async function initDashboard(token) {
 
     if (initialGuild) {
       setSelectedGuildCard(initialGuild.id);
-      await loadGuild(initialGuild);
+      await loadGuildFromFirebase(initialGuild);
     } else {
       if (selectedGuildName) selectedGuildName.textContent = "Nenhum servidor encontrado";
       if (selectedGuildId) selectedGuildId.textContent = "-";
@@ -599,6 +565,19 @@ async function init() {
   }
 
   await initDashboard(token);
+}
+
+if (goDashboardBtn) {
+  goDashboardBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    const token = getToken();
+    if (token) {
+      showDashboard();
+      initDashboard(token);
+    } else if (loginBtn) {
+      loginBtn.click();
+    }
+  });
 }
 
 init();
