@@ -1,11 +1,9 @@
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
   getFirestore,
   doc,
   getDoc,
-  setDoc,
-  updateDoc
+  setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 /* =========================
@@ -20,8 +18,8 @@ const ADD_BOT_URL =
 
 const LOGIN_SCOPE = "identify email guilds";
 
-const TOKEN_KEY = "aqua_token";
-const SELECTED_GUILD_KEY = "aqua_selected_guild";
+const TOKEN_KEY = "aqua_discord_token";
+const SELECTED_GUILD_KEY = "aqua_selected_guild_id";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDJ_FRnNVJYOPbKUQZpx43WgYmqA-u-CB0",
@@ -39,44 +37,47 @@ const db = getFirestore(app);
    ELEMENTOS
 ========================= */
 
+const landing = document.getElementById("landing");
+const dashboard = document.getElementById("dashboard");
+const goDashboardBtn = document.getElementById("goDashboardBtn");
+
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 const addBotBtn = document.getElementById("addBotBtn");
 
-const landingPage = document.getElementById("landingPage");
-const dashboardPage = document.getElementById("dashboardPage");
-
-const userAvatar = document.getElementById("userAvatar");
-const userName = document.getElementById("userName");
-const userEmail = document.getElementById("userEmail");
-
+const userBox = document.getElementById("userBox");
 const guildsDiv = document.getElementById("guilds");
-
-const selectedGuildName = document.getElementById("selectedGuildName");
-const selectedGuildId = document.getElementById("selectedGuildId");
-
+const guildCount = document.getElementById("guildCount");
 const channelsDiv = document.getElementById("channels");
 const rolesDiv = document.getElementById("roles");
 
+const selectedGuildName = document.getElementById("selectedGuildName");
+const selectedGuildId = document.getElementById("selectedGuildId");
+const syncedState = document.getElementById("syncedState");
+
+const welcomeToggle = document.getElementById("welcomeToggle");
 const welcomeChannel = document.getElementById("welcomeChannel");
-const leaveChannel = document.getElementById("leaveChannel");
+const welcomeMsg = document.getElementById("welcomeMsg");
+const saveWelcome = document.getElementById("saveWelcome");
 
-const saveWelcomeBtn = document.getElementById("saveWelcomeBtn");
-const saveLeaveBtn = document.getElementById("saveLeaveBtn");
+const goodbyeToggle = document.getElementById("goodbyeToggle");
+const goodbyeChannel = document.getElementById("goodbyeChannel");
+const goodbyeMsg = document.getElementById("goodbyeMsg");
+const saveGoodbye = document.getElementById("saveGoodbye");
 
-const welcomeMessage = document.getElementById("welcomeMessage");
-const leaveMessage = document.getElementById("leaveMessage");
+const autoroleToggle = document.getElementById("autoroleToggle");
+const autoroleRole = document.getElementById("autoroleRole");
+const saveAutorole = document.getElementById("saveAutorole");
 
-const saveMessagesBtn = document.getElementById("saveMessagesBtn");
+const antilinkToggle = document.getElementById("antilinkToggle");
+const saveAntiLink = document.getElementById("saveAntiLink");
 
-const autoRoleSelect = document.getElementById("autoRoleSelect");
-const saveAutoRoleBtn = document.getElementById("saveAutoRoleBtn");
-
-const antiLinkToggle = document.getElementById("antiLinkToggle");
-const saveAntiLinkBtn = document.getElementById("saveAntiLinkBtn");
+let currentGuildId = null;
+let currentChannels = [];
+let currentRoles = [];
 
 /* =========================
-   LOGIN
+   LOGIN URL
 ========================= */
 
 const discordLoginURL =
@@ -86,62 +87,86 @@ const discordLoginURL =
   `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
   `&scope=${encodeURIComponent(LOGIN_SCOPE)}`;
 
-loginBtn.href = discordLoginURL;
-addBotBtn.href = ADD_BOT_URL;
+if (loginBtn) {
+  loginBtn.href = discordLoginURL;
+}
+
+if (addBotBtn) {
+  addBotBtn.href = ADD_BOT_URL;
+}
 
 /* =========================
-   UTILS
+   HELPERS
 ========================= */
 
-function escapeHtml(text) {
-  return String(text)
+function escapeHtml(value) {
+  return String(value)
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;");
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 function getTokenFromHash() {
   const hash = window.location.hash;
+  if (!hash || !hash.includes("access_token=")) return null;
 
-  if (!hash.includes("access_token")) return null;
-
-  const params = new URLSearchParams(hash.substring(1));
-
+  const params = new URLSearchParams(hash.slice(1));
   return params.get("access_token");
 }
 
 function getToken() {
-  const hashToken = getTokenFromHash();
+  const fromHash = getTokenFromHash();
 
-  if (hashToken) {
-    localStorage.setItem(TOKEN_KEY, hashToken);
-
-    window.history.replaceState(
-      {},
-      document.title,
-      window.location.pathname
-    );
-
-    return hashToken;
+  if (fromHash) {
+    localStorage.setItem(TOKEN_KEY, fromHash);
+    window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+    return fromHash;
   }
 
   return localStorage.getItem(TOKEN_KEY);
 }
 
+function showLanding() {
+  if (landing) landing.classList.remove("hidden");
+  if (dashboard) dashboard.classList.add("hidden");
+}
+
+function showDashboard() {
+  if (landing) landing.classList.add("hidden");
+  if (dashboard) dashboard.classList.remove("hidden");
+}
+
 function logout() {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(SELECTED_GUILD_KEY);
-
-  location.reload();
+  window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+  showLanding();
 }
 
-logoutBtn.addEventListener("click", logout);
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", logout);
+}
 
-/* =========================
-   DISCORD API
-========================= */
+function defaultUserAvatar(user) {
+  const discriminator = Number(user?.discriminator || 0);
+  return `https://cdn.discordapp.com/embed/avatars/${discriminator % 5}.png`;
+}
 
-async function discordApi(path, token) {
+function guildIconUrl(guild) {
+  if (guild?.icon) {
+    return `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=128`;
+  }
+  return "https://cdn-icons-png.flaticon.com/512/2111/2111370.png";
+}
+
+function emptyState(target, text) {
+  if (!target) return;
+  target.innerHTML = `<div class="empty">${escapeHtml(text)}</div>`;
+}
+
+async function api(path, token) {
   const response = await fetch(`https://discord.com/api${path}`, {
     headers: {
       Authorization: `Bearer ${token}`
@@ -149,32 +174,173 @@ async function discordApi(path, token) {
   });
 
   if (!response.ok) {
-    throw new Error("Erro Discord API");
+    throw new Error(`Discord API respondeu com ${response.status}`);
   }
 
   return response.json();
 }
 
-async function getUser(token) {
-  return discordApi("/users/@me", token);
-}
-
-async function getGuilds(token) {
-  return discordApi("/users/@me/guilds", token);
-}
+const getUser = (token) => api("/users/@me", token);
+const getGuilds = (token) => api("/users/@me/guilds", token);
 
 /* =========================
    USER
 ========================= */
 
 function renderUser(user) {
-  const avatar = user.avatar
-    ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`
-    : `https://cdn.discordapp.com/embed/avatars/0.png`;
+  if (!userBox) return;
 
-  userAvatar.src = avatar;
-  userName.textContent = user.username;
-  userEmail.textContent = user.email || "Sem email";
+  const avatar = user.avatar
+    ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128`
+    : defaultUserAvatar(user);
+
+  userBox.innerHTML = `
+    <img src="${avatar}" alt="Avatar do utilizador">
+    <div class="user-meta">
+      <div class="user-name">${escapeHtml(user.username)}</div>
+      <div class="user-email">${escapeHtml(user.email || "Sem email")}</div>
+    </div>
+  `;
+}
+
+/* =========================
+   CHANNELS / ROLES
+========================= */
+
+function typeLabel(type) {
+  const t = String(type || "").toLowerCase();
+
+  if (t.includes("text")) return "Texto";
+  if (t.includes("voice")) return "Voz";
+  if (t.includes("category")) return "Categoria";
+  if (t.includes("announcement")) return "Anúncios";
+  if (t.includes("forum")) return "Fórum";
+  if (t.includes("stage")) return "Stage";
+  return "Outro";
+}
+
+function fillChannelSelect(selectEl, channels, selectedId) {
+  if (!selectEl) return;
+
+  selectEl.innerHTML = "";
+
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "Seleciona um canal";
+  selectEl.appendChild(placeholder);
+
+  const usableChannels = [...(channels || [])]
+    .filter((c) => !String(c.type || "").toLowerCase().includes("voice"))
+    .sort((a, b) => {
+      const pa = Number.isFinite(a.position) ? a.position : 0;
+      const pb = Number.isFinite(b.position) ? b.position : 0;
+      return pa - pb;
+    });
+
+  for (const channel of usableChannels) {
+    const option = document.createElement("option");
+    option.value = channel.id;
+    option.textContent = `# ${channel.name || "Sem nome"}`;
+    if (String(channel.id) === String(selectedId)) {
+      option.selected = true;
+    }
+    selectEl.appendChild(option);
+  }
+}
+
+function fillRoleSelect(selectEl, roles, selectedId) {
+  if (!selectEl) return;
+
+  selectEl.innerHTML = "";
+
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "Seleciona um cargo";
+  selectEl.appendChild(placeholder);
+
+  const usableRoles = [...(roles || [])]
+    .filter((r) => r.name !== "@everyone")
+    .sort((a, b) => {
+      const pa = Number.isFinite(a.position) ? a.position : 0;
+      const pb = Number.isFinite(b.position) ? b.position : 0;
+      return pb - pa;
+    });
+
+  for (const role of usableRoles) {
+    const option = document.createElement("option");
+    option.value = role.id;
+    option.textContent = role.name || "Sem nome";
+    if (String(role.id) === String(selectedId)) {
+      option.selected = true;
+    }
+    selectEl.appendChild(option);
+  }
+}
+
+function renderChannels(channels) {
+  if (!channelsDiv) return;
+
+  channelsDiv.innerHTML = "";
+  currentChannels = Array.isArray(channels) ? channels : [];
+
+  if (!currentChannels.length) {
+    emptyState(channelsDiv, "Sem canais guardados neste servidor.");
+    return;
+  }
+
+  const sorted = [...currentChannels].sort((a, b) => {
+    const pa = Number.isFinite(a.position) ? a.position : 0;
+    const pb = Number.isFinite(b.position) ? b.position : 0;
+    return pa - pb;
+  });
+
+  for (const channel of sorted) {
+    const item = document.createElement("div");
+    item.className = "list-item";
+
+    item.innerHTML = `
+      <div class="list-icon">#</div>
+      <div>
+        <div class="list-title">${escapeHtml(channel.name || "Sem nome")}</div>
+        <div class="list-sub">Tipo: ${escapeHtml(typeLabel(channel.type))} · ID: ${escapeHtml(channel.id || "")}</div>
+      </div>
+    `;
+
+    channelsDiv.appendChild(item);
+  }
+}
+
+function renderRoles(roles) {
+  if (!rolesDiv) return;
+
+  rolesDiv.innerHTML = "";
+  currentRoles = Array.isArray(roles) ? roles : [];
+
+  if (!currentRoles.length) {
+    emptyState(rolesDiv, "Sem cargos guardados neste servidor.");
+    return;
+  }
+
+  const sorted = [...currentRoles].sort((a, b) => {
+    const pa = Number.isFinite(a.position) ? a.position : 0;
+    const pb = Number.isFinite(b.position) ? b.position : 0;
+    return pb - pa;
+  });
+
+  for (const role of sorted) {
+    const item = document.createElement("div");
+    item.className = "list-item";
+
+    item.innerHTML = `
+      <div class="list-icon">@</div>
+      <div>
+        <div class="list-title">${escapeHtml(role.name || "Sem nome")}</div>
+        <div class="list-sub">Permissões: ${escapeHtml(role.permissions || "0")} · ID: ${escapeHtml(role.id || "")}</div>
+      </div>
+    `;
+
+    rolesDiv.appendChild(item);
+  }
 }
 
 /* =========================
@@ -190,24 +356,34 @@ function guildIcon(guild) {
 }
 
 function renderGuilds(guilds) {
+  if (!guildsDiv) return;
+
   guildsDiv.innerHTML = "";
+
+  if (!Array.isArray(guilds) || guilds.length === 0) {
+    if (guildCount) guildCount.textContent = "0";
+    emptyState(guildsDiv, "Não encontrei servidores com a conta ligada.");
+    return;
+  }
+
+  if (guildCount) guildCount.textContent = `${guilds.length}`;
 
   guilds.forEach((guild) => {
     const div = document.createElement("div");
-
     div.className = "guild-card";
+    div.dataset.guildId = guild.id;
 
     div.innerHTML = `
-      <img src="${guildIcon(guild)}">
+      <img class="guild-icon" src="${guildIcon(guild)}" alt="Ícone de ${escapeHtml(guild.name)}">
       <div class="guild-info">
-        <h3>${escapeHtml(guild.name)}</h3>
-        <p>${guild.id}</p>
+        <div class="guild-name">${escapeHtml(guild.name)}</div>
+        <div class="guild-id">${escapeHtml(guild.id)}</div>
       </div>
     `;
 
     div.onclick = async () => {
       localStorage.setItem(SELECTED_GUILD_KEY, guild.id);
-
+      setSelectedGuildCard(guild.id);
       await loadGuild(guild);
     };
 
@@ -215,25 +391,35 @@ function renderGuilds(guilds) {
   });
 }
 
+function setSelectedGuildCard(guildId) {
+  document.querySelectorAll(".guild-card").forEach((card) => {
+    card.classList.toggle("selected", card.dataset.guildId === guildId);
+  });
+}
+
 /* =========================
-   LOAD GUILD
+   GUILD LOAD
 ========================= */
 
 async function loadGuild(guild) {
-  selectedGuildName.textContent = guild.name;
-  selectedGuildId.textContent = guild.id;
+  if (selectedGuildName) selectedGuildName.textContent = guild.name;
+  if (selectedGuildId) selectedGuildId.textContent = guild.id;
 
-  channelsDiv.innerHTML = "A carregar...";
-  rolesDiv.innerHTML = "A carregar...";
+  if (channelsDiv) channelsDiv.innerHTML = "A carregar...";
+  if (rolesDiv) rolesDiv.innerHTML = "A carregar...";
+
+  currentGuildId = guild.id;
 
   try {
     const guildRef = doc(db, "guilds", guild.id);
-
     const snap = await getDoc(guildRef);
 
     if (!snap.exists()) {
-      channelsDiv.innerHTML = "Bot ainda não sincronizou.";
-      rolesDiv.innerHTML = "Bot ainda não sincronizou.";
+      emptyState(channelsDiv, "Bot ainda não sincronizou.");
+      emptyState(rolesDiv, "Bot ainda não sincronizou.");
+      fillChannelSelect(welcomeChannel, [], "");
+      fillChannelSelect(goodbyeChannel, [], "");
+      fillRoleSelect(autoroleRole, [], "");
       return;
     }
 
@@ -241,77 +427,12 @@ async function loadGuild(guild) {
 
     renderChannels(data.channels || []);
     renderRoles(data.roles || []);
-
     loadSettings(data);
-
   } catch (err) {
     console.error(err);
-
-    channelsDiv.innerHTML = "Erro ao carregar.";
-    rolesDiv.innerHTML = "Erro ao carregar.";
+    emptyState(channelsDiv, "Erro ao carregar.");
+    emptyState(rolesDiv, "Erro ao carregar.");
   }
-}
-
-/* =========================
-   CHANNELS
-========================= */
-
-function renderChannels(channels) {
-  channelsDiv.innerHTML = "";
-
-  welcomeChannel.innerHTML = "";
-  leaveChannel.innerHTML = "";
-
-  channels.forEach((channel) => {
-    const div = document.createElement("div");
-
-    div.className = "channel-item";
-
-    div.innerHTML = `
-      <span># ${escapeHtml(channel.name)}</span>
-    `;
-
-    channelsDiv.appendChild(div);
-
-    const opt1 = document.createElement("option");
-    opt1.value = channel.id;
-    opt1.textContent = channel.name;
-
-    const opt2 = document.createElement("option");
-    opt2.value = channel.id;
-    opt2.textContent = channel.name;
-
-    welcomeChannel.appendChild(opt1);
-    leaveChannel.appendChild(opt2);
-  });
-}
-
-/* =========================
-   ROLES
-========================= */
-
-function renderRoles(roles) {
-  rolesDiv.innerHTML = "";
-  autoRoleSelect.innerHTML = "";
-
-  roles.forEach((role) => {
-    const div = document.createElement("div");
-
-    div.className = "role-item";
-
-    div.innerHTML = `
-      <span>@ ${escapeHtml(role.name)}</span>
-    `;
-
-    rolesDiv.appendChild(div);
-
-    const option = document.createElement("option");
-
-    option.value = role.id;
-    option.textContent = role.name;
-
-    autoRoleSelect.appendChild(option);
-  });
 }
 
 /* =========================
@@ -319,132 +440,165 @@ function renderRoles(roles) {
 ========================= */
 
 function loadSettings(data) {
-  if (data.welcomeChannel) {
-    welcomeChannel.value = data.welcomeChannel;
-  }
+  const welcome = data?.config?.welcome || {};
+  const goodbye = data?.config?.goodbye || {};
+  const autorole = data?.config?.autorole || {};
+  const antiLink = data?.config?.antilink || {};
 
-  if (data.leaveChannel) {
-    leaveChannel.value = data.leaveChannel;
-  }
+  if (welcomeToggle) welcomeToggle.checked = Boolean(welcome.enabled);
+  if (welcomeChannel) fillChannelSelect(welcomeChannel, data.channels || [], welcome.channelId || "");
+  if (welcomeMsg) welcomeMsg.value = welcome.message || "";
 
-  if (data.autoRole) {
-    autoRoleSelect.value = data.autoRole;
-  }
+  if (goodbyeToggle) goodbyeToggle.checked = Boolean(goodbye.enabled);
+  if (goodbyeChannel) fillChannelSelect(goodbyeChannel, data.channels || [], goodbye.channelId || "");
+  if (goodbyeMsg) goodbyeMsg.value = goodbye.message || "";
 
-  if (data.welcomeMessage) {
-    welcomeMessage.value = data.welcomeMessage;
-  }
+  if (autoroleToggle) autoroleToggle.checked = Boolean(autorole.enabled);
+  if (autoroleRole) fillRoleSelect(autoroleRole, data.roles || [], autorole.roleId || "");
 
-  if (data.leaveMessage) {
-    leaveMessage.value = data.leaveMessage;
-  }
-
-  antiLinkToggle.checked = data.antiLink || false;
+  if (antilinkToggle) antilinkToggle.checked = Boolean(antiLink.enabled);
 }
 
-/* =========================
-   SAVE CONFIG
-========================= */
-
-async function updateGuildData(data) {
-  const guildId = localStorage.getItem(SELECTED_GUILD_KEY);
-
+async function updateGuildData(payload) {
+  const guildId = localStorage.getItem(SELECTED_GUILD_KEY) || currentGuildId;
   if (!guildId) return;
 
   const guildRef = doc(db, "guilds", guildId);
-
-  await updateDoc(guildRef, data);
+  await setDoc(guildRef, payload, { merge: true });
 }
 
-saveWelcomeBtn.onclick = async () => {
-  await updateGuildData({
-    welcomeChannel: welcomeChannel.value
+/* =========================
+   SAVE BUTTONS
+========================= */
+
+if (saveWelcome) {
+  saveWelcome.onclick = async () => {
+    await updateGuildData({
+      config: {
+        welcome: {
+          enabled: welcomeToggle?.checked || false,
+          channelId: welcomeChannel?.value || "",
+          message: welcomeMsg?.value || "",
+          useEmbed: true
+        }
+      }
+    });
+
+    alert("Boas-vindas salvo.");
+  };
+}
+
+if (saveGoodbye) {
+  saveGoodbye.onclick = async () => {
+    await updateGuildData({
+      config: {
+        goodbye: {
+          enabled: goodbyeToggle?.checked || false,
+          channelId: goodbyeChannel?.value || "",
+          message: goodbyeMsg?.value || "",
+          useEmbed: true
+        }
+      }
+    });
+
+    alert("Saídas salvo.");
+  };
+}
+
+if (saveAutorole) {
+  saveAutorole.onclick = async () => {
+    await updateGuildData({
+      config: {
+        autorole: {
+          enabled: autoroleToggle?.checked || false,
+          roleId: autoroleRole?.value || ""
+        }
+      }
+    });
+
+    alert("Autorole salvo.");
+  };
+}
+
+if (saveAntiLink) {
+  saveAntiLink.onclick = async () => {
+    await updateGuildData({
+      config: {
+        antilink: {
+          enabled: antilinkToggle?.checked || false
+        }
+      }
+    });
+
+    alert("Anti-link atualizado.");
+  };
+}
+
+/* =========================
+   NAV
+========================= */
+
+if (goDashboardBtn) {
+  goDashboardBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+
+    const token = getToken();
+
+    if (token) {
+      showDashboard();
+      initDashboard(token);
+    } else if (loginBtn) {
+      loginBtn.click();
+    }
   });
-
-  alert("Canal de boas-vindas salvo.");
-};
-
-saveLeaveBtn.onclick = async () => {
-  await updateGuildData({
-    leaveChannel: leaveChannel.value
-  });
-
-  alert("Canal de saída salvo.");
-};
-
-saveMessagesBtn.onclick = async () => {
-  await updateGuildData({
-    welcomeMessage: welcomeMessage.value,
-    leaveMessage: leaveMessage.value
-  });
-
-  alert("Mensagens salvas.");
-};
-
-saveAutoRoleBtn.onclick = async () => {
-  await updateGuildData({
-    autoRole: autoRoleSelect.value
-  });
-
-  alert("Autorole salva.");
-};
-
-saveAntiLinkBtn.onclick = async () => {
-  await updateGuildData({
-    antiLink: antiLinkToggle.checked
-  });
-
-  alert("Anti-link atualizado.");
-};
+}
 
 /* =========================
    INIT
 ========================= */
 
+async function initDashboard(token) {
+  showDashboard();
+
+  try {
+    const user = await getUser(token);
+    renderUser(user);
+
+    const guilds = await getGuilds(token);
+    const ownedGuilds = guilds.filter((guild) => guild.owner);
+
+    renderGuilds(ownedGuilds);
+
+    const lastGuildId = localStorage.getItem(SELECTED_GUILD_KEY);
+    const initialGuild =
+      ownedGuilds.find((guild) => guild.id === lastGuildId) || ownedGuilds[0];
+
+    if (initialGuild) {
+      setSelectedGuildCard(initialGuild.id);
+      await loadGuild(initialGuild);
+    } else {
+      if (selectedGuildName) selectedGuildName.textContent = "Nenhum servidor encontrado";
+      if (selectedGuildId) selectedGuildId.textContent = "-";
+      emptyState(channelsDiv, "Sem servidores.");
+      emptyState(rolesDiv, "Sem servidores.");
+      if (syncedState) syncedState.textContent = "Sem servidores para mostrar.";
+    }
+  } catch (error) {
+    console.error(error);
+    localStorage.removeItem(TOKEN_KEY);
+    showLanding();
+  }
+}
+
 async function init() {
   const token = getToken();
 
   if (!token) {
-    landingPage.style.display = "flex";
-    dashboardPage.style.display = "none";
+    showLanding();
     return;
   }
 
-  landingPage.style.display = "none";
-  dashboardPage.style.display = "block";
-
-  try {
-    const user = await getUser(token);
-
-    renderUser(user);
-
-    const guilds = await getGuilds(token);
-
-    const ownedGuilds = guilds.filter((g) => g.owner);
-
-    renderGuilds(ownedGuilds);
-
-    const savedGuild = localStorage.getItem(SELECTED_GUILD_KEY);
-
-    let firstGuild = ownedGuilds[0];
-
-    if (savedGuild) {
-      const found = ownedGuilds.find((g) => g.id === savedGuild);
-
-      if (found) {
-        firstGuild = found;
-      }
-    }
-
-    if (firstGuild) {
-      await loadGuild(firstGuild);
-    }
-
-  } catch (err) {
-    console.error(err);
-
-    logout();
-  }
+  await initDashboard(token);
 }
 
 init();
